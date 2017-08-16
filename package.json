@@ -1,0 +1,27 @@
+{
+  "name": "bitstamp-exc",
+  "version": "1.0.0",
+  "description": "An NPM package for utilizing the Bitstamp exchange API",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha test/**/*.test.js"
+  },
+  "author": "Galin Kostov <gko@coinify.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "mocha-bamboo-reporter": "*",
+    "sinon": "^1.17.3"
+  },
+  "dependencies": {
+    "async": "^1.5.2",
+    "crypto": "0.0.3",
+    "lodash": "^4.5.0",
+    "request": "^2.69.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/CoinifySoftware/bitstamp-exc.git"
+  }
+}
