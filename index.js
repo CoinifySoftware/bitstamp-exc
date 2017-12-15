@@ -1,7 +1,7 @@
 const request = require('request'),
   _ = require('lodash'),
   crypto = require('crypto'),
-  Currency = require('./lib/currency.js'),
+  currencyHelper = require('@coinify/currency'),
   async = require('async'),
   {promisify} = require('util'),
   errorCodes = require('./lib/error_codes.js'),
@@ -252,10 +252,10 @@ function constructTransactionObject(currentTx) {
   };
 
   if (parseFloat(currentTx.btc) === 0) {
-    tx.amount = Currency.toSmallestSubunit(parseFloat(currentTx.usd), 'USD');
+    tx.amount = currencyHelper.toSmallestSubunit(parseFloat(currentTx.usd), 'USD');
     tx.currency = 'USD';
   } else {
-    tx.amount = Currency.toSmallestSubunit(parseFloat(currentTx.btc), 'BTC');
+    tx.amount = currencyHelper.toSmallestSubunit(parseFloat(currentTx.btc), 'BTC');
     tx.currency = 'BTC';
   }
 
@@ -336,7 +336,7 @@ Bitstamp.prototype.getTicker = function (baseCurrency, quoteCurrency, callback) 
       high24Hours: parseFloat(res.high),
       low24Hours: parseFloat(res.low),
       vwap24Hours: parseFloat(res.vwap),
-      volume24Hours: Currency.toSmallestSubunit(parseFloat(res.volume), baseCurrency)
+      volume24Hours: currencyHelper.toSmallestSubunit(parseFloat(res.volume), baseCurrency)
     };
 
     /*
@@ -395,7 +395,7 @@ Bitstamp.prototype.getOrderBook = function (baseCurrency, quoteCurrency, callbac
     const convertRawEntry = function convertRawEntry(entry) {
       return {
         price: parseFloat(entry[0]),
-        baseAmount: Currency.toSmallestSubunit(parseFloat(entry[1]), 'BTC')
+        baseAmount: currencyHelper.toSmallestSubunit(parseFloat(entry[1]), 'BTC')
       };
     };
     const rawBids = res.bids || [];
@@ -432,12 +432,12 @@ Bitstamp.prototype.getBalance = function (callback) {
 
     const balance = {
       available: {
-        USD: Currency.toSmallestSubunit(res.usd_available, 'USD'),
-        BTC: Currency.toSmallestSubunit(res.btc_available, 'BTC')
+        USD: currencyHelper.toSmallestSubunit(res.usd_available, 'USD'),
+        BTC: currencyHelper.toSmallestSubunit(res.btc_available, 'BTC')
       },
       total: {
-        USD: Currency.toSmallestSubunit(res.usd_balance, 'USD'),
-        BTC: Currency.toSmallestSubunit(res.btc_balance, 'BTC')
+        USD: currencyHelper.toSmallestSubunit(res.usd_balance, 'USD'),
+        BTC: currencyHelper.toSmallestSubunit(res.btc_balance, 'BTC')
       }
     };
 
@@ -507,14 +507,14 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
     };
 
     const baseAmounts = res.transactions.map(function (tx) {
-      const baseAmount = Currency.toSmallestSubunit(tx.btc, 'BTC');
+      const baseAmount = currencyHelper.toSmallestSubunit(tx.btc, 'BTC');
       return trade.raw.orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
     });
     const quoteAmounts = res.transactions.map(function (tx) {
-      const quoteAmount = Currency.toSmallestSubunit(tx.usd, 'USD');
+      const quoteAmount = currencyHelper.toSmallestSubunit(tx.usd, 'USD');
       return trade.raw.orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
     });
-    const feeAmounts = res.transactions.map(tx => Currency.toSmallestSubunit(tx.fee, 'USD'));
+    const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, 'USD'));
 
     order.baseAmount = _.sum(baseAmounts);
     order.quoteAmount = _.sum(quoteAmounts);
@@ -586,11 +586,11 @@ Bitstamp.prototype.listTrades = function (latestTrade) {
           type: 'limit',
           state: 'closed',
           baseCurrency: 'BTC',
-          baseAmount: Currency.toSmallestSubunit(parseFloat(tx.btc), 'BTC'),
+          baseAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.btc), 'BTC'),
           quoteCurrency: 'USD',
-          quoteAmount: Currency.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
+          quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
           feeCurrency: 'USD',
-          feeAmount: Currency.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
+          feeAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
           tradeTime: new Date(tx.datetime),
           raw: tx
         };
@@ -633,7 +633,7 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
   /* The amount passed to the method is denominated in smallest sub-unit, but Bitstamp API requires
    * the amount to be in main-unit, so we convert it.
    */
-  const amountMainUnit = Currency.fromSmallestSubunit(amountSubUnit, 'BTC');
+  const amountMainUnit = currencyHelper.fromSmallestSubunit(amountSubUnit, 'BTC');
 
   /* Make the request */
   this._post(orderType, {amount: amountMainUnit, price: limitPrice}, function (err, res) {
