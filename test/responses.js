@@ -1,18 +1,18 @@
-var getTickerResponse =
+const getTickerResponse =
 {
-  "high": "597.53",
-  "last": "596.09",
-  "timestamp": "1470839254",
-  "bid": "596.09",
-  "vwap": "586.35",
-  "volume": "3596.69846615",
-  "low": "579.43",
-  "ask": "596.11",
+  high: '597.53',
+  last: '596.09',
+  timestamp: '1470839254',
+  bid: '596.09',
+  vwap: '586.35',
+  volume: '3596.69846615',
+  low: '579.43',
+  ask: '596.11',
   // Actual response from https://www.bitstamp.net/api/ticker/ - "open" was the only float, all others were strings
-  "open": 582.71
+  open: 582.71
 };
 
-var getBalanceResponse =
+const getBalanceResponse =
 {
   btc_reserved: '6.123',
   fee: '0.2500',
@@ -23,7 +23,7 @@ var getBalanceResponse =
   usd_available: '49.00'
 };
 
-var getOrderBookResponse =
+const getOrderBookResponse =
 {
   timestamp: '1455629907',
   bids: [
@@ -36,7 +36,7 @@ var getOrderBookResponse =
   ]
 };
 
-var getTradeSellResponse =
+const getTradeSellResponse =
 {
   status: 'Finished',
   transactions: [
@@ -57,7 +57,7 @@ var getTradeSellResponse =
   ]
 };
 
-var getTradeBuyResponse =
+const getTradeBuyResponse =
 {
   status: 'Finished',
   transactions: [
@@ -78,32 +78,32 @@ var getTradeBuyResponse =
   ]
 };
 
-var listTransactionsResponse =
+const listTransactionsResponse =
   [
-    { usd: '-124.37',
+    {usd: '-124.37',
       btc: '0.04906037',
       btc_usd: '2535.01',
       order_id: 24870681,
       fee: '0.14000000',
       type: 2,
       id: 16180467,
-      datetime: '2017-06-14 20:28:33' },
-    { usd: '-249.26',
+      datetime: '2017-06-14 20:28:33'},
+    {usd: '-249.26',
       btc: '0.09790521',
       btc_usd: '2545.96',
       order_id: 24882718,
       fee: '0.28000000',
       type: 2,
       id: 16181386,
-      datetime: '2016-06-14 20:46:46' },
-    { usd: '-55.21',
+      datetime: '2016-06-14 20:46:46'},
+    {usd: '-55.21',
       btc: '0.02174610',
       btc_usd: '2538.97',
       order_id: 24880122,
       fee: '0.07000000',
       type: 2,
       id: 16181233,
-      datetime: '2016-06-14 20:42:58' },
+      datetime: '2016-06-14 20:42:58'},
     {
       usd: '-0.00',
       btc: '0.10000000',
@@ -146,7 +146,7 @@ var listTransactionsResponse =
     }
   ];
 
-var placeTradeResponse =
+const placeTradeResponse =
 {
   price: '460',
   amount: '0.0125',
@@ -155,17 +155,17 @@ var placeTradeResponse =
   datetime: '2016-02-16 14:56:00.272057'
 };
 
-var placeBuyTradeInsufficientFundsResponse =
+const placeBuyTradeInsufficientFundsResponse =
   {
     error: {
-      "__all__": ["You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details."]
+      __all__: ['You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.']
     }
   };
 
-var placeSellTradeInsufficientFundsResponse =
+const placeSellTradeInsufficientFundsResponse =
   {
     error: {
-      "__all__": ["You have only 0.14141414 BTC available. Check your account balance for details."]
+      __all__: ['You have only 0.14141414 BTC available. Check your account balance for details.']
     }
   };
 

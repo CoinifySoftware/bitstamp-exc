@@ -1,4 +1,4 @@
-var request = require('request'),
+const request = require('request'),
   _ = require('lodash'),
   crypto = require('crypto'),
   Currency = require('./lib/currency.js'),
@@ -9,7 +9,7 @@ var request = require('request'),
 
 /* =================   Constructor   ================= */
 
-var Bitstamp = function (settings) {
+const Bitstamp = function (settings) {
   this.key = settings.key;
   this.secret = settings.secret;
   this.clientId = settings.clientId;
@@ -26,9 +26,9 @@ var Bitstamp = function (settings) {
  * @param callback
  */
 Bitstamp.prototype._get = function (action, callback) {
-  var path = '/api/' + action + '/';
+  const path = '/api/' + action + '/';
 
-  var options = {
+  const options = {
     url: this.host + path,
     method: 'GET',
     timeout: this.timeout
@@ -45,18 +45,18 @@ Bitstamp.prototype._get = function (action, callback) {
  * @param callback
  */
 Bitstamp.prototype._post = function (action, params, callback) {
-  if (typeof params == 'function') {
+  if (typeof params === 'function') {
     callback = params;
   }
 
   if (!this.key || !this.secret || !this.clientId)
-    return callback('Must provide key, secret and client ID to make this API request.');
+  { return callback('Must provide key, secret and client ID to make this API request.'); }
 
-  var path = '/api/' + action + '/';
-  var nonce = new Date().getTime()*10;
-  var message = nonce + this.clientId + this.key;
-  var signer = crypto.createHmac('sha256', new Buffer(this.secret, 'utf8'));
-  var signature = signer.update(message).digest('hex').toUpperCase();
+  const path = '/api/' + action + '/';
+  const nonce = new Date().getTime()*10;
+  const message = nonce + this.clientId + this.key;
+  const signer = crypto.createHmac('sha256', new Buffer(this.secret, 'utf8'));
+  const signature = signer.update(message).digest('hex').toUpperCase();
 
   params = _.extend({
     key: this.key,
@@ -64,7 +64,7 @@ Bitstamp.prototype._post = function (action, params, callback) {
     nonce: nonce
   }, params);
 
-  var options = {
+  const options = {
     url: this.host + path,
     method: 'POST',
     headers: {
@@ -93,7 +93,7 @@ Bitstamp.prototype._request = function (params, callback) {
     headers: {'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)'}
   }, params);
 
-  var requestFunction = function (err, res, body) {
+  const requestFunction = function (err, res, body) {
     if (err || !body) {
       return callback(constructError('There is an error in the response from the Bitstamp service...',
         errorCodes.EXCHANGE_SERVER_ERROR, err));
@@ -103,9 +103,9 @@ Bitstamp.prototype._request = function (params, callback) {
         errorCodes.EXCHANGE_SERVER_ERROR, res.error));
     }
 
-    var data;
+    let data;
     try {
-      data = JSON.parse(body)
+      data = JSON.parse(body);
     } catch (e) {
       return callback(constructError('Could not understand response from exchange server.',
         errorCodes.MODULE_ERROR, e));
@@ -121,11 +121,11 @@ Bitstamp.prototype._request = function (params, callback) {
         errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
 
       /* Check for known errors */
-      if ( data.error['__all__'] ) {
-        const allErrors = data.error['__all__'];
+      if ( data.error.__all__ ) {
+        const allErrors = data.error.__all__;
 
         /* Check for insufficient funds */
-        let insufficientFundsErrorMessage =
+        const insufficientFundsErrorMessage =
           _.find(allErrors, msg => REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS.test(msg)) ||
           _.find(allErrors, msg => REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS.test(msg));
         if ( insufficientFundsErrorMessage ) {
@@ -134,18 +134,18 @@ Bitstamp.prototype._request = function (params, callback) {
       }
 
       return callback(error);
-    } else {
-      return callback(null, data);
     }
+    return callback(null, data);
+
   };
 
   if (params.method === 'GET') {
     return request.get(params, requestFunction);
   } else if (params.method === 'POST') {
     return request.post(params, requestFunction);
-  } else {
-    return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
   }
+  return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
+
 };
 
 /**
@@ -163,14 +163,15 @@ Bitstamp.prototype._request = function (params, callback) {
  * @param {function}    callback    Returns an array of user transactions as returned by bitstamp
  */
 function iterateRequestTxs(self, earliestDate, callback) {
-  var transactionsAll = []
-    , responseLength = 1000
-    , offset = 0;
+  const transactionsAll = [],
+    responseLength = 1000;
+
   const BITSTAMP_REQUEST_LIMIT = 100;
-  var continueIteration = true;
+  let continueIteration = true,
+    offset = 0;
 
   /* The POST request function to be called arbitrary number of times in async.doWhilst() */
-  var post = function (asyncCallback) {
+  const post = function (asyncCallback) {
     self._post('user_transactions', {limit: BITSTAMP_REQUEST_LIMIT, offset: offset, sort: 'desc'},
       function (err, res) {
         if (err) {
@@ -179,7 +180,7 @@ function iterateRequestTxs(self, earliestDate, callback) {
         }
 
         res.every(function (tx) {
-          var currentTxDateTime = new Date(tx.datetime);
+          const currentTxDateTime = new Date(tx.datetime);
           /* Check if the current transaction's timestamp is lower (further in the past) than earliest date allowed
            * If so, set the iteration flag to false and break the loop, so that the process terminates
            * and exits, and no more transactions are written in the global list of txs.
@@ -210,12 +211,12 @@ function iterateRequestTxs(self, earliestDate, callback) {
   };
 
   /* The check condition function for async.doWhilst() */
-  var check = function () {
+  const check = function () {
     return continueIteration;
   };
 
   /* The function to be called when the iteration cycle exits async.doWhilst() */
-  var done = function (err, deposits) {
+  const done = function (err, deposits) {
     if (err) {
       return callback(constructError('Trades could not be listed.',
         errorCodes.MODULE_ERROR, err));
@@ -237,7 +238,7 @@ function iterateRequestTxs(self, earliestDate, callback) {
  * @returns {object} tx         See the return parameter of iterateRequestTxs docs for more info
  */
 function constructTransactionObject(currentTx) {
-  var tx = {
+  const tx = {
     // Convert externalId to string
     externalId: String(currentTx.id),
     // Convert timestamp string to ISO-8601 string (Add '+0' to force UTC interpretation of 'datetime')
@@ -246,7 +247,7 @@ function constructTransactionObject(currentTx) {
     state: 'completed',
     amount: 0,
     currency: '',
-    type: currentTx.type == constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
+    type: currentTx.type === constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
     raw: currentTx
   };
 
@@ -271,7 +272,7 @@ function constructTransactionObject(currentTx) {
  * @returns {Error}
  */
 function constructError(message, errorCode, errorCause) {
-  var error = new Error(message);
+  const error = new Error(message);
   error.code = errorCode;
   if (errorCause) {
     error.cause = errorCause;
@@ -326,7 +327,7 @@ Bitstamp.prototype.getTicker = function (baseCurrency, quoteCurrency, callback) 
     /*
      * Construct result object
      */
-    var ticker = {
+    const ticker = {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
       bid: parseFloat(res.bid),
@@ -335,7 +336,7 @@ Bitstamp.prototype.getTicker = function (baseCurrency, quoteCurrency, callback) 
       high24Hours: parseFloat(res.high),
       low24Hours: parseFloat(res.low),
       vwap24Hours: parseFloat(res.vwap),
-      volume24Hours: Currency.toSmallestSubunit(parseFloat(res.volume), baseCurrency),
+      volume24Hours: Currency.toSmallestSubunit(parseFloat(res.volume), baseCurrency)
     };
 
     /*
@@ -385,20 +386,20 @@ Bitstamp.prototype.getOrderBook = function (baseCurrency, quoteCurrency, callbac
     }
 
     /* Declare the orderBook object with the currency pair */
-    var orderBook = {
+    const orderBook = {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency
     };
 
     /* Organize the Order Book values in a custom way */
-    var convertRawEntry = function convertRawEntry(entry) {
+    const convertRawEntry = function convertRawEntry(entry) {
       return {
         price: parseFloat(entry[0]),
         baseAmount: Currency.toSmallestSubunit(parseFloat(entry[1]), 'BTC')
-      }
+      };
     };
-    var rawBids = res.bids || [];
-    var rawAsks = res.asks || [];
+    const rawBids = res.bids || [];
+    const rawAsks = res.asks || [];
 
     /* Declare and assign the organized bids and asks to the orderBook object */
     orderBook.bids = rawBids.map(convertRawEntry);
@@ -429,14 +430,14 @@ Bitstamp.prototype.getBalance = function (callback) {
       return callback(err);
     }
 
-    var balance = {
-      'available': {
-        'USD': Currency.toSmallestSubunit(res.usd_available, 'USD'),
-        'BTC': Currency.toSmallestSubunit(res.btc_available, 'BTC')
+    const balance = {
+      available: {
+        USD: Currency.toSmallestSubunit(res.usd_available, 'USD'),
+        BTC: Currency.toSmallestSubunit(res.btc_available, 'BTC')
       },
-      'total': {
-        'USD': Currency.toSmallestSubunit(res.usd_balance, 'USD'),
-        'BTC': Currency.toSmallestSubunit(res.btc_balance, 'BTC')
+      total: {
+        USD: Currency.toSmallestSubunit(res.usd_balance, 'USD'),
+        BTC: Currency.toSmallestSubunit(res.btc_balance, 'BTC')
       }
     };
 
@@ -478,7 +479,7 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
   if (!trade || !callback) {
     return callback(constructError('Trade object is a required parameter.', errorCodes.MODULE_ERROR, null));
   }
-  if (trade.raw.orderType != constants.TYPE_SELL_ORDER && trade.raw.orderType != constants.TYPE_BUY_ORDER) {
+  if (trade.raw.orderType !== constants.TYPE_SELL_ORDER && trade.raw.orderType !== constants.TYPE_BUY_ORDER) {
     return callback(constructError('Trade object must have a raw orderType parameter with value either \'sell\' or' +
       ' \'buy\'.', errorCodes.MODULE_ERROR, null));
   }
@@ -491,11 +492,11 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
     // Add ID to raw result
     _.defaults(res, {id: trade.raw.id});
 
-    var order = {
+    const order = {
       // Bitstamp order_status endpoint doesn't echo the ID, so we'll get it from the trade parameter
       externalId: trade.raw.id.toString(),
       type: 'limit',
-      state: res.status.toLowerCase() == 'finished' ? 'closed' : 'open',
+      state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
       baseAmount: 0,
       quoteAmount: 0,
       baseCurrency: 'BTC',
@@ -505,15 +506,15 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
       raw: res
     };
 
-    var baseAmounts = res.transactions.map(function (tx) {
-      var baseAmount = Currency.toSmallestSubunit(tx.btc, 'BTC');
-      return trade.raw.orderType == constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
+    const baseAmounts = res.transactions.map(function (tx) {
+      const baseAmount = Currency.toSmallestSubunit(tx.btc, 'BTC');
+      return trade.raw.orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
     });
-    var quoteAmounts = res.transactions.map(function (tx) {
-      var quoteAmount = Currency.toSmallestSubunit(tx.usd, 'USD');
-      return trade.raw.orderType == constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
+    const quoteAmounts = res.transactions.map(function (tx) {
+      const quoteAmount = Currency.toSmallestSubunit(tx.usd, 'USD');
+      return trade.raw.orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
     });
-    var feeAmounts = res.transactions.map(tx => Currency.toSmallestSubunit(tx.fee, 'USD'));
+    const feeAmounts = res.transactions.map(tx => Currency.toSmallestSubunit(tx.fee, 'USD'));
 
     order.baseAmount = _.sum(baseAmounts);
     order.quoteAmount = _.sum(quoteAmounts);
@@ -534,7 +535,7 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
  * @param {function}    callback            Returns the found transactions
  */
 Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
-  var self = this;
+  const self = this;
   /*
    * If latestTx is provided - create a date&time value to compare to, for a matching tx.
    *
@@ -542,7 +543,7 @@ Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
    * iterated until the the response contains < 1000 objects, since in Bitstamp there cannot be transaction made
    * earlier. This way ALL transactions in the certain account will be returned.
    */
-  var latestTxDate = latestTransaction ? new Date(latestTransaction.raw.datetime) : new Date(0);
+  const latestTxDate = latestTransaction ? new Date(latestTransaction.raw.datetime) : new Date(0);
   iterateRequestTxs(self, latestTxDate, (err, transactions) => {
     if (err) {
       return callback(err);
@@ -563,7 +564,7 @@ Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
  * @returns {Promise} Resolves to an array of trades
  */
 Bitstamp.prototype.listTrades = function (latestTrade) {
-  var latestTxDate =  new Date(0);
+  let latestTxDate = new Date(0);
   if (latestTrade) {
     const {raw} = latestTrade;
     if (raw.transactions) {
@@ -575,27 +576,27 @@ Bitstamp.prototype.listTrades = function (latestTrade) {
   }
 
 
-  var iterateRequestTxsPromise = promisify(iterateRequestTxs);
+  const iterateRequestTxsPromise = promisify(iterateRequestTxs);
   return iterateRequestTxsPromise(this, latestTxDate)
-  .then((transactions) => {
-    transactions = transactions.filter(tx => tx.type === constants.TYPE_MARKET_TRADE);
-    return transactions.map( tx => {
-      return {
-        externalId: tx.order_id.toString(),
-        type: 'limit',
-        state: 'closed',
-        baseCurrency: 'BTC',
-        baseAmount: Currency.toSmallestSubunit(parseFloat(tx.btc), 'BTC'),
-        quoteCurrency: 'USD',
-        quoteAmount: Currency.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
-        feeCurrency: 'USD',
-        feeAmount: Currency.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
-        tradeTime: new Date(tx.datetime),
-        raw: tx
-      };
+    .then((transactions) => {
+      transactions = transactions.filter(tx => tx.type === constants.TYPE_MARKET_TRADE);
+      return transactions.map( tx => {
+        return {
+          externalId: tx.order_id.toString(),
+          type: 'limit',
+          state: 'closed',
+          baseCurrency: 'BTC',
+          baseAmount: Currency.toSmallestSubunit(parseFloat(tx.btc), 'BTC'),
+          quoteCurrency: 'USD',
+          quoteAmount: Currency.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
+          feeCurrency: 'USD',
+          feeAmount: Currency.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
+          tradeTime: new Date(tx.datetime),
+          raw: tx
+        };
+      });
     });
-  });
-}
+};
 
 /**
  * Place a limit BUY or SELL trade (order), depending on the sign of the baseAmount provided.
@@ -626,13 +627,13 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
   }
 
   /* Decide whether to place a BUY or a SELL trade */
-  var orderType = baseAmount < 0 ? constants.TYPE_SELL_ORDER : constants.TYPE_BUY_ORDER;
-  var amountSubUnit = orderType === constants.TYPE_SELL_ORDER ? baseAmount * -1 : baseAmount;
+  const orderType = baseAmount < 0 ? constants.TYPE_SELL_ORDER : constants.TYPE_BUY_ORDER;
+  const amountSubUnit = orderType === constants.TYPE_SELL_ORDER ? baseAmount * -1 : baseAmount;
 
   /* The amount passed to the method is denominated in smallest sub-unit, but Bitstamp API requires
    * the amount to be in main-unit, so we convert it.
    */
-  var amountMainUnit = Currency.fromSmallestSubunit(amountSubUnit, 'BTC');
+  const amountMainUnit = Currency.fromSmallestSubunit(amountSubUnit, 'BTC');
 
   /* Make the request */
   this._post(orderType, {amount: amountMainUnit, price: limitPrice}, function (err, res) {
@@ -641,7 +642,7 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
     }
 
     /* Construct the custom trade response object */
-    var trade = {
+    const trade = {
       externalId: res.id.toString(),
       type: 'limit',
       state: 'open',

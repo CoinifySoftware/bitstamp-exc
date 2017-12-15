@@ -4,7 +4,10 @@
   "description": "An NPM package for utilizing the Bitstamp exchange API",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha test/**/*.test.js"
+    "test": "./node_modules/.bin/mocha test/**/*.test.js",
+    "lint": "eslint --color .",
+    "lint-fix": "eslint --fix .",
+    "build": "npm i && npm run lint && npm test"
   },
   "author": "Galin Kostov <gko@coinify.com>",
   "license": "ISC",
