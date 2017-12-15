@@ -1,4 +1,4 @@
-var sinon = require('sinon'),
+const sinon = require('sinon'),
   request = require('request'),
   responses = require('./../responses.js'),
   should = require('chai').should(),
@@ -8,11 +8,11 @@ var sinon = require('sinon'),
   errorCodes = require('../../lib/error_codes.js');
 
 describe('Bitstamp Exchange Service Tests ->', function () {
-  var bitstamp = new exchange({
-    key: "apikey",
-    secret: "apisecret",
-    clientId: "clientId",
-    host: "http://localhost:3000"
+  const bitstamp = new exchange({
+    key: 'apikey',
+    secret: 'apisecret',
+    clientId: 'clientId',
+    host: 'http://localhost:3000'
   });
 
   /* =================   Testing response data consistency   ================= */
@@ -61,7 +61,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
 
         done();
       });
-    })
+    });
 
   });
 
@@ -153,7 +153,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       done();
     });
 
-    var trade = {
+    const trade = {
       raw: {
         id: 108670705,
         orderType: 'sell'
@@ -203,7 +203,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       done();
     });
 
-    var trade = {
+    const trade = {
       raw: {
         id: 108670705,
         orderType: 'buy',
@@ -294,7 +294,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       done();
     });
 
-    var latestTransaction = {
+    const latestTransaction = {
       raw: {
         id: 9214142,
         datetime: '2015-09-03 11:40:46'
@@ -350,82 +350,82 @@ describe('Bitstamp Exchange Service Tests ->', function () {
 
     it('gets all trades that exist in the Bitstamp account', function () {
       return bitstamp.listTrades(null)
-      .then((result) => {
-        request.post.called.should.be.equal(true);
-        result.should.be.an('array');
+        .then((result) => {
+          request.post.called.should.be.equal(true);
+          result.should.be.an('array');
 
-        expect(result.length).to.equal(3);
+          expect(result.length).to.equal(3);
 
-        expect(result[0]).to.deep.equal({
-          baseAmount: 4906037,
-          baseCurrency: "BTC",
-          externalId: "24870681",
-          feeAmount: 14,
-          feeCurrency: "USD",
-          quoteAmount: -12437,
-          quoteCurrency: "USD",
-          tradeTime: new Date('2017-06-14 20:28:33'),
-          raw: {
-            usd: '-124.37',
-            btc: '0.04906037',
-            btc_usd: '2535.01',
-            order_id: 24870681,
-            fee: '0.14000000',
-            type: 2,
-            id: 16180467,
-            datetime: '2017-06-14 20:28:33'
-          },
-          state: "closed",
-          type: "limit"
+          expect(result[0]).to.deep.equal({
+            baseAmount: 4906037,
+            baseCurrency: 'BTC',
+            externalId: '24870681',
+            feeAmount: 14,
+            feeCurrency: 'USD',
+            quoteAmount: -12437,
+            quoteCurrency: 'USD',
+            tradeTime: new Date('2017-06-14 20:28:33'),
+            raw: {
+              usd: '-124.37',
+              btc: '0.04906037',
+              btc_usd: '2535.01',
+              order_id: 24870681,
+              fee: '0.14000000',
+              type: 2,
+              id: 16180467,
+              datetime: '2017-06-14 20:28:33'
+            },
+            state: 'closed',
+            type: 'limit'
+          });
+
+          expect(result[1]).to.deep.equal({
+            baseAmount: 9790521,
+            baseCurrency: 'BTC',
+            externalId: '24882718',
+            feeAmount: 28,
+            feeCurrency: 'USD',
+            quoteAmount: -24926,
+            quoteCurrency: 'USD',
+            tradeTime: new Date('2016-06-14 20:46:46'),
+            raw: {
+              btc: '0.09790521',
+              btc_usd: '2545.96',
+              datetime: '2016-06-14 20:46:46',
+              fee: '0.28000000',
+              id: 16181386,
+              order_id: 24882718,
+              type: 2,
+              usd: '-249.26'
+            },
+            state: 'closed',
+            type: 'limit'
+          });
+
+          expect(result[2]).to.deep.equal({
+            baseAmount: 2174610,
+            baseCurrency: 'BTC',
+            externalId: '24880122',
+            feeAmount: 7,
+            feeCurrency: 'USD',
+            quoteAmount: -5521,
+            quoteCurrency: 'USD',
+            tradeTime: new Date('2016-06-14 20:42:58'),
+            raw: {
+              btc: '0.02174610',
+              btc_usd: '2538.97',
+              datetime: '2016-06-14 20:42:58',
+              fee: '0.07000000',
+              id: 16181233,
+              order_id: 24880122,
+              type: 2,
+              usd: '-55.21'
+            },
+            state: 'closed',
+            type: 'limit'
+          });
+
         });
-
-        expect(result[1]).to.deep.equal({
-          baseAmount: 9790521,
-          baseCurrency: "BTC",
-          externalId: "24882718",
-          feeAmount: 28,
-          feeCurrency: "USD",
-          quoteAmount: -24926,
-          quoteCurrency: "USD",
-          tradeTime: new Date('2016-06-14 20:46:46'),
-          raw: {
-            btc: "0.09790521",
-            btc_usd: "2545.96",
-            datetime: "2016-06-14 20:46:46",
-            fee: "0.28000000",
-            id: 16181386,
-            order_id: 24882718,
-            type: 2,
-            usd: "-249.26",
-          },
-          state: "closed",
-          type: "limit"
-        });
-
-        expect(result[2]).to.deep.equal({
-          baseAmount: 2174610,
-          baseCurrency: "BTC",
-          externalId: "24880122",
-          feeAmount: 7,
-          feeCurrency: "USD",
-          quoteAmount: -5521,
-          quoteCurrency: "USD",
-          tradeTime: new Date('2016-06-14 20:42:58'),
-          raw: {
-            btc: "0.02174610",
-            btc_usd: "2538.97",
-            datetime: "2016-06-14 20:42:58",
-            fee: "0.07000000",
-            id: 16181233,
-            order_id: 24880122,
-            type: 2,
-            usd: "-55.21",
-          },
-          state: "closed",
-          type: "limit"
-        });
-
-      });
     });
   });
 
@@ -441,14 +441,14 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       done();
     });
 
-    var latestTrade = {
+    const latestTrade = {
       raw: {
         id: 9214142,
         datetime: '2017-01-01 00:00:00'
       }
     };
 
-    var latestTrade2 = {
+    const latestTrade2 = {
       raw: {
         transactions: [
           {
@@ -462,39 +462,39 @@ describe('Bitstamp Exchange Service Tests ->', function () {
 
     it('gets trades after the lastTx provided, including', function () {
       return bitstamp.listTrades(latestTrade)
-      .then(result => {
+        .then(result => {
 
-        request.post.called.should.be.equal(true);
-        result.should.be.an('array');
+          request.post.called.should.be.equal(true);
+          result.should.be.an('array');
 
-        expect(result.length).to.equal(1);
+          expect(result.length).to.equal(1);
 
 
-        expect(result[0]).to.deep.equal({
-          baseAmount: 4906037,
-          baseCurrency: "BTC",
-          externalId: "24870681",
-          feeAmount: 14,
-          feeCurrency: "USD",
-          quoteAmount: -12437,
-          quoteCurrency: "USD",
-          tradeTime: new Date('2017-06-14 20:28:33'),
-          raw: {
-            usd: '-124.37',
-            btc: '0.04906037',
-            btc_usd: '2535.01',
-            order_id: 24870681,
-            fee: '0.14000000',
-            type: 2,
-            id: 16180467,
-            datetime: '2017-06-14 20:28:33'
-          },
-          state: "closed",
-          type: "limit"
-        }
-        );
+          expect(result[0]).to.deep.equal({
+            baseAmount: 4906037,
+            baseCurrency: 'BTC',
+            externalId: '24870681',
+            feeAmount: 14,
+            feeCurrency: 'USD',
+            quoteAmount: -12437,
+            quoteCurrency: 'USD',
+            tradeTime: new Date('2017-06-14 20:28:33'),
+            raw: {
+              usd: '-124.37',
+              btc: '0.04906037',
+              btc_usd: '2535.01',
+              order_id: 24870681,
+              fee: '0.14000000',
+              type: 2,
+              id: 16180467,
+              datetime: '2017-06-14 20:28:33'
+            },
+            state: 'closed',
+            type: 'limit'
+          }
+          );
 
-      });
+        });
     });
 
     it('gets trades after the lastTx provided, including (handle different format of raw', function () {
@@ -509,12 +509,12 @@ describe('Bitstamp Exchange Service Tests ->', function () {
 
           expect(result[0]).to.deep.equal({
             baseAmount: 4906037,
-            baseCurrency: "BTC",
-            externalId: "24870681",
+            baseCurrency: 'BTC',
+            externalId: '24870681',
             feeAmount: 14,
-            feeCurrency: "USD",
+            feeCurrency: 'USD',
             quoteAmount: -12437,
-            quoteCurrency: "USD",
+            quoteCurrency: 'USD',
             tradeTime: new Date('2017-06-14 20:28:33'),
             raw: {
               usd: '-124.37',
@@ -526,8 +526,8 @@ describe('Bitstamp Exchange Service Tests ->', function () {
               id: 16180467,
               datetime: '2017-06-14 20:28:33'
             },
-            state: "closed",
-            type: "limit"
+            state: 'closed',
+            type: 'limit'
           }
           );
 
@@ -548,7 +548,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     });
 
     it('places a sell trade on the exchange and returns a response object', function (done) {
-      requestPostStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));;
+      requestPostStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));
 
       bitstamp.placeTrade(-1250000, 460.00, 'BTC', 'USD', function (err, result) {
         if (err) {
@@ -576,7 +576,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     });
 
     it('returns "insufficient_funds" error if trade cannot be placed due to insufficient funds', function(done) {
-      requestPostStub.yields(null, {}, JSON.stringify(responses.placeSellTradeInsufficientFundsResponse))
+      requestPostStub.yields(null, {}, JSON.stringify(responses.placeSellTradeInsufficientFundsResponse));
 
       bitstamp.placeTrade(-1250000, 460.00, 'BTC', 'USD', function(err, result) {
         if (!err) {
@@ -584,7 +584,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
         }
 
         expect(result).to.equal(undefined);
-        expect(err.message).to.equal(responses.placeSellTradeInsufficientFundsResponse.error['__all__'][0]);
+        expect(err.message).to.equal(responses.placeSellTradeInsufficientFundsResponse.error.__all__[0]);
         expect(err.code).to.equal(errorCodes.INSUFFICIENT_FUNDS);
         expect(err.cause).to.equal(undefined);
 
@@ -607,7 +607,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     });
 
     it('places a buy trade on the exchange and returns a response object', function (done) {
-      requestPostStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse))
+      requestPostStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));
 
       bitstamp.placeTrade(1250000, 460.00, 'BTC', 'USD', function (err, result) {
         if (err) {
@@ -628,7 +628,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     });
 
     it('returns "insufficient_funds" error if trade cannot be placed due to insufficient funds', function(done) {
-      requestPostStub.yields(null, {}, JSON.stringify(responses.placeBuyTradeInsufficientFundsResponse))
+      requestPostStub.yields(null, {}, JSON.stringify(responses.placeBuyTradeInsufficientFundsResponse));
 
       bitstamp.placeTrade(1250000, 460.00, 'BTC', 'USD', function(err, result) {
         if (!err) {
@@ -636,7 +636,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
         }
 
         expect(result).to.equal(undefined);
-        expect(err.message).to.equal(responses.placeBuyTradeInsufficientFundsResponse.error['__all__'][0]);
+        expect(err.message).to.equal(responses.placeBuyTradeInsufficientFundsResponse.error.__all__[0]);
         expect(err.code).to.equal(errorCodes.INSUFFICIENT_FUNDS);
         expect(err.cause).to.equal(undefined);
 
@@ -686,7 +686,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       done();
     });
 
-    var trade = {
+    const trade = {
       id: 108670705,
       raw: {
         orderType: 'hakuna matata'
@@ -811,7 +811,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
   /* =================   Testing wrong requests OR errors in the response   ================= */
 
   describe('Error from the request', function () {
-    var errorCause = new Error('Some random test error');
+    const errorCause = new Error('Some random test error');
     before(function (done) {
       sinon.stub(request, 'post').yields(errorCause, {}, JSON.stringify(responses.getBalanceResponse));
       done();
@@ -859,7 +859,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
   });
 
   describe('Error message in the response object', function () {
-    var exchangeError = new Error('Some random test error');
+    const exchangeError = new Error('Some random test error');
     before(function (done) {
       sinon.stub(request, 'post').yields(null, {error: exchangeError}, JSON.stringify(responses.getBalanceResponse));
       done();
@@ -884,7 +884,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
   });
 
   describe('Error message in the data attribute in the response object', function () {
-    var exchangeErrorMsg = 'Some random test error';
+    const exchangeErrorMsg = 'Some random test error';
     before(function (done) {
       sinon.stub(request, 'post').yields(null, {}, JSON.stringify({error: exchangeErrorMsg}));
       done();
