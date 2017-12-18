@@ -188,7 +188,7 @@ bitstamp.getTrade(trade, function (err, data) {
 ```js
  {
     type: 'limit',
-    state: closed',
+    state: 'closed',
     baseAmount: -200000000, // Sold 2.00000000 BTC...
     quoteAmount: 74526,     // ... for 745.26 USD
     baseCurrency: 'BTC'     // Currency of the baseAmount
@@ -255,6 +255,37 @@ bitstamp.listTransactions(latestTransaction, function (err, data) {
    // ... more transactions
 ]
 ```
+
+#### Withdrawals
+Request a withdrawal to be made (only BTC is supported)
+
+##### Input parameters
+
+Param      | Type    | Description  
+-----------|---------|--------------------------------
+`amount`   | Integer | Amount to withdraw in subunits
+`currency` | String  | Currency of the amount
+`address`  | String  | Address to withdraw to (btc_address)  
+
+##### Example call
+```js
+bitstamp.withdraw({amount: 10000, currency: 'BTC', address: 'btc_address'})
+  .then(response) {
+    // Handle response
+  })
+  .catch(err) {
+    // Handle error
+  })
+```
+
+##### Response on success
+```js
+{
+  externalId: '1235',
+  state: 'pending'
+}
+```
+
 #### Sell & Buy limit order (in one method)
 Place a limit BUY or SELL trade (order), depending on the sign of the baseAmount argument.
 SELL if amount is negative

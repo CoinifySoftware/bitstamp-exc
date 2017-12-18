@@ -244,7 +244,7 @@ function constructTransactionObject(currentTx) {
     // Convert timestamp string to ISO-8601 string (Add '+0' to force UTC interpretation of 'datetime')
     timestamp: new Date(currentTx.datetime + '+0').toISOString(),
     // Bitstamp doesn't have the concept of tx states, so they are always 'completed'
-    state: 'completed',
+    state: constants.STATE_COMPLETED,
     amount: 0,
     currency: '',
     type: currentTx.type === constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
@@ -659,6 +659,43 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
     /* All is well. Return the placed trade response */
     return callback(null, trade);
   });
+};
+
+
+/**
+ * Withdraw money from the exchange
+ *
+ * @param  {object}  args
+ * @param  {integer} args.amount   Amount to withdraw in subunits
+ * @param  {string}  args.currency Currency of the amount
+ * @param  {string}  args.address  Address to withdraw to (btc_address)
+ * @return {Promise<object>}       Resolves in a object like this
+ *                                 {
+ *                                   externalId: 'asdba',
+ *                                   state: 'pending'
+ *                                 }
+ */
+Bitstamp.prototype.withdraw = async function(args) {
+  const {amount, currency, address} = args;
+
+  if (currency !== 'BTC') {
+    throw constructError('Only BTC withdrawals are allowed');
+  }
+
+  // Convert sub units to real units
+  const amountRealUnit = currencyHelper.fromSmallestSubunit(amount, currency);
+
+  // Construct request object
+  const requestArgs = {address, amount: amountRealUnit, instant: 0};
+
+  // Transform request function to a promise function
+  const postFn = promisify(this._post).bind(this);
+
+  // Call API
+  const {id: externalId} = await postFn('bitcoin_withdrawal', requestArgs);
+
+  // Construct and return response
+  return {externalId, state: constants.STATE_PENDING};
 };
 
 module.exports = Bitstamp;
