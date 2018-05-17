@@ -172,7 +172,7 @@ function iterateRequestTxs(self, earliestDate, callback) {
 
   /* The POST request function to be called arbitrary number of times in async.doWhilst() */
   const post = function (asyncCallback) {
-    self._post('user_transactions', {limit: BITSTAMP_REQUEST_LIMIT, offset: offset, sort: 'desc'},
+    self._post('v2/user_transactions', {limit: BITSTAMP_REQUEST_LIMIT, offset: offset, sort: 'desc'},
       function (err, res) {
         if (err) {
           continueIteration = false;
@@ -247,7 +247,7 @@ function constructTransactionObject(currentTx) {
     state: constants.STATE_COMPLETED,
     amount: 0,
     currency: '',
-    type: currentTx.type === constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
+    type: parseInt(currentTx.type) === constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
     raw: currentTx
   };
 
@@ -302,24 +302,17 @@ function constructError(message, errorCode, errorCause) {
  *                                      }
  */
 Bitstamp.prototype.getTicker = function (baseCurrency, quoteCurrency, callback) {
-  /*
-   * Normalize currency codes
-   */
-  baseCurrency = baseCurrency.toUpperCase();
-  quoteCurrency = quoteCurrency.toUpperCase();
-
-  /*
-   * Currently only BTC/USD is supported. Return error if other currency pair
-   */
-  if (baseCurrency !== 'BTC' || quoteCurrency !== 'USD') {
-    return callback(constructError('Bitstamp only supports BTC and USD as base and quote currencies, respectively.',
+  // First check if currency pair is supported
+  const currencyPair = baseCurrency.toLowerCase() + quoteCurrency.toLowerCase();
+  if (!constants.SUPPORTED_CURRENCY_PAIRS.includes(currencyPair)) {
+    return callback(constructError('Currency pair not supported',
       errorCodes.MODULE_ERROR, null));
   }
 
   /*
    * Call the ticker endpoint
    */
-  this._get('ticker', function (err, res) {
+  this._get(`v2/ticker/${currencyPair}`, function (err, res) {
     if (err) {
       return callback(err);
     }
@@ -373,14 +366,14 @@ Bitstamp.prototype.getTicker = function (baseCurrency, quoteCurrency, callback) 
  *           }
  */
 Bitstamp.prototype.getOrderBook = function (baseCurrency, quoteCurrency, callback) {
-  baseCurrency = baseCurrency.toUpperCase();
-  quoteCurrency = quoteCurrency.toUpperCase();
-  if (baseCurrency !== 'BTC' || quoteCurrency !== 'USD') {
-    return callback(constructError('Bitstamp only supports BTC and USD as base and quote currencies, respectively.',
+  // First check if currency pair is supported
+  const currencyPair = baseCurrency.toLowerCase() + quoteCurrency.toLowerCase();
+  if (!constants.SUPPORTED_CURRENCY_PAIRS.includes(currencyPair)) {
+    return callback(constructError('Currency pair not supported',
       errorCodes.MODULE_ERROR, null));
   }
 
-  this._get('order_book', function (err, res) {
+  this._get(`v2/order_book/${currencyPair}`, function (err, res) {
     if (err) {
       return callback(err);
     }
@@ -395,7 +388,7 @@ Bitstamp.prototype.getOrderBook = function (baseCurrency, quoteCurrency, callbac
     const convertRawEntry = function convertRawEntry(entry) {
       return {
         price: parseFloat(entry[0]),
-        baseAmount: currencyHelper.toSmallestSubunit(parseFloat(entry[1]), 'BTC')
+        baseAmount: currencyHelper.toSmallestSubunit(parseFloat(entry[1]), baseCurrency)
       };
     };
     const rawBids = res.bids || [];
@@ -425,17 +418,19 @@ Bitstamp.prototype.getOrderBook = function (baseCurrency, quoteCurrency, callbac
  *                      }
  */
 Bitstamp.prototype.getBalance = function (callback) {
-  this._post('balance', null, function (err, res) {
+  this._post('v2/balance', null, function (err, res) {
     if (err) {
       return callback(err);
     }
 
     const balance = {
       available: {
+        ETH: currencyHelper.toSmallestSubunit(res.eth_available, 'ETH'),
         USD: currencyHelper.toSmallestSubunit(res.usd_available, 'USD'),
         BTC: currencyHelper.toSmallestSubunit(res.btc_available, 'BTC')
       },
       total: {
+        ETH: currencyHelper.toSmallestSubunit(res.eth_balance, 'ETH'),
         USD: currencyHelper.toSmallestSubunit(res.usd_balance, 'USD'),
         BTC: currencyHelper.toSmallestSubunit(res.btc_balance, 'BTC')
       }
@@ -454,7 +449,9 @@ Bitstamp.prototype.getBalance = function (callback) {
  *                          following structure:
  * trade:
  * {
- *
+ *    baseCurrency: 'BTC',
+ *    quoteCurrency: 'USD,
+ *    feeCurrency: 'USD',
  *    raw: {
  *        id: <int> the_trade_id,
  *        <string> order_type
@@ -479,46 +476,50 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
   if (!trade || !callback) {
     return callback(constructError('Trade object is a required parameter.', errorCodes.MODULE_ERROR, null));
   }
-  if (trade.raw.orderType !== constants.TYPE_SELL_ORDER && trade.raw.orderType !== constants.TYPE_BUY_ORDER) {
+
+  // Extract from trade
+  const {baseCurrency, quoteCurrency, feeCurrency, raw} = trade;
+
+  if (!baseCurrency || !quoteCurrency || !feeCurrency || !raw) {
+    return callback(constructError('Trade object requires raw, baseCurrency, quoteCurrency and feeCurrency provided',
+      errorCodes.MODULE_ERROR, null));
+  }
+
+  // Extract from raw
+  const {orderType, id} = raw;
+
+  if (orderType !== constants.TYPE_SELL_ORDER && orderType !== constants.TYPE_BUY_ORDER) {
     return callback(constructError('Trade object must have a raw orderType parameter with value either \'sell\' or' +
       ' \'buy\'.', errorCodes.MODULE_ERROR, null));
   }
 
-  this._post('order_status', {id: trade.raw.id}, function (err, res) {
+  this._post('order_status', {id}, (err, res) => {
     if (err) {
       return callback(err);
     }
 
-    // Add ID to raw result
-    _.defaults(res, {id: trade.raw.id});
+    const baseAmounts = res.transactions.map((tx) => {
+      const baseAmount = currencyHelper.toSmallestSubunit(tx[baseCurrency.toLowerCase()], baseCurrency);
+      return orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
+    });
+    const quoteAmounts = res.transactions.map((tx) => {
+      const quoteAmount = currencyHelper.toSmallestSubunit(tx[quoteCurrency.toLowerCase()], quoteCurrency);
+      return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
+    });
+
+    const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
 
     const order = {
-      // Bitstamp order_status endpoint doesn't echo the ID, so we'll get it from the trade parameter
-      externalId: trade.raw.id.toString(),
+      baseCurrency, quoteCurrency, feeCurrency,
+      externalId: id.toString(),
       type: 'limit',
       state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
-      baseAmount: 0,
-      quoteAmount: 0,
-      baseCurrency: 'BTC',
-      quoteCurrency: 'USD',
-      feeAmount: 0,
-      feeCurrency: 'USD',
-      raw: res
+      baseAmount: _.sum(baseAmounts),
+      quoteAmount: _.sum(quoteAmounts),
+      feeAmount: _.sum(feeAmounts),
+      // Add ID to raw result
+      raw: _.defaults(res, {id})
     };
-
-    const baseAmounts = res.transactions.map(function (tx) {
-      const baseAmount = currencyHelper.toSmallestSubunit(tx.btc, 'BTC');
-      return trade.raw.orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
-    });
-    const quoteAmounts = res.transactions.map(function (tx) {
-      const quoteAmount = currencyHelper.toSmallestSubunit(tx.usd, 'USD');
-      return trade.raw.orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
-    });
-    const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, 'USD'));
-
-    order.baseAmount = _.sum(baseAmounts);
-    order.quoteAmount = _.sum(quoteAmounts);
-    order.feeAmount = _.sum(feeAmounts);
 
     return callback(null, order);
   });
@@ -548,7 +549,7 @@ Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
     if (err) {
       return callback(err);
     }
-    transactions = transactions.filter(tx => tx.type === constants.TYPE_DEPOSIT || tx.type === constants.TYPE_WITHDRAWAL);
+    transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_DEPOSIT || parseInt(tx.type) === constants.TYPE_WITHDRAWAL);
     transactions = transactions.map(constructTransactionObject);
     return callback(null, transactions);
   });
@@ -575,18 +576,25 @@ Bitstamp.prototype.listTrades = function (latestTrade) {
     }
   }
 
-
   const iterateRequestTxsPromise = promisify(iterateRequestTxs);
   return iterateRequestTxsPromise(this, latestTxDate)
     .then((transactions) => {
-      transactions = transactions.filter(tx => tx.type === constants.TYPE_MARKET_TRADE);
+      // console.dir(transactions, {colors: true});
+      transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_MARKET_TRADE);
       return transactions.map( tx => {
+        let baseCurrency = 'BTC',
+          baseAmountMainUnit = tx.btc;
+        if (tx.eth_usd) {
+          baseCurrency = 'ETH';
+          baseAmountMainUnit = tx.eth;
+        }
+
         return {
+          baseCurrency,
+          baseAmount: currencyHelper.toSmallestSubunit(parseFloat(baseAmountMainUnit), baseCurrency),
           externalId: tx.order_id.toString(),
           type: 'limit',
           state: 'closed',
-          baseCurrency: 'BTC',
-          baseAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.btc), 'BTC'),
           quoteCurrency: 'USD',
           quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
           feeCurrency: 'USD',
