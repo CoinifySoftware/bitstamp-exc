@@ -111,6 +111,17 @@ const getTradeBuyResponseETH = {
 const listTransactionsResponse =
   [
     {
+      fee: '0.00000000',
+      btc_usd: '0.00',
+      datetime: '2018-05-17 14:50:43',
+      usd: 0,
+      btc: 0,
+      eth: '-0.01451258',
+      type: '1',
+      id: 66231357,
+      eur: 0
+    },
+    {
       usd: '-9.97',
       order_id: 1234,
       datetime: '2018-05-16 09:11:20',

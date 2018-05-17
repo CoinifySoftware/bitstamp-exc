@@ -1,0 +1,99 @@
+const expect = require('chai').expect,
+  {promisify} = require('util'),
+  sinon = require('sinon'),
+  responses = require('./../responses.js'),
+  request = require('request'),
+  Bitstamp = require('../../index.js');
+
+describe('#listTransactions', () => {
+
+  const bitstamp = new Bitstamp({
+    key: 'apikey',
+    secret: 'apisecret',
+    clientId: 'clientId',
+    host: 'http://localhost:3000'
+  });
+
+  let requestStub;
+  beforeEach(() => {
+    requestStub = sinon.stub(request, 'post')
+      .yields(null, {}, JSON.stringify(responses.listTransactionsResponse));
+  });
+
+  afterEach(() => {
+    requestStub.restore();
+  });
+
+  it('should get all transactions', async () => {
+    const res = await promisify(bitstamp.listTransactions.bind(bitstamp))(null);
+
+    expect(res).to.deep.equal([
+      {
+        currency: 'ETH',
+        amount: -14512580000,
+        externalId: '66231357',
+        timestamp: '2018-05-17T14:50:43.000Z',
+        state: 'completed',
+        type: 'withdrawal',
+        raw: responses.listTransactionsResponse[0]
+      },
+      {
+        currency: 'BTC',
+        amount: 10000000,
+        externalId: '10609931',
+        timestamp: '2016-02-15T12:25:49.000Z',
+        state: 'completed',
+        type: 'deposit',
+        raw: responses.listTransactionsResponse[3]
+      },
+      {
+        currency: 'BTC',
+        amount: -1300000000,
+        externalId: '9214142',
+        timestamp: '2015-09-03T11:40:46.000Z',
+        state: 'completed',
+        type: 'withdrawal',
+        raw: responses.listTransactionsResponse[4]
+      },
+      {
+        currency: 'USD',
+        amount: -13700,
+        externalId: '9214109',
+        timestamp: '2015-09-03T11:30:40.000Z',
+        state: 'completed',
+        type: 'deposit',
+        raw: responses.listTransactionsResponse[5]
+      }
+    ]);
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
+  });
+
+  it('should use latestTransaction', async () => {
+    const latestTransaction = {
+      raw: {
+        id: 9214142,
+        datetime: '2018-01-01 11:40:46'
+      }
+    };
+
+    const res = await promisify(bitstamp.listTransactions.bind(bitstamp))(latestTransaction);
+
+    expect(res).to.deep.equal([
+      {
+        currency: 'ETH',
+        amount: -14512580000,
+        externalId: '66231357',
+        timestamp: '2018-05-17T14:50:43.000Z',
+        state: 'completed',
+        type: 'withdrawal',
+        raw: responses.listTransactionsResponse[0]
+      }
+    ]);
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
+  });
+
+});

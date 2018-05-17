@@ -238,28 +238,28 @@ function iterateRequestTxs(self, earliestDate, callback) {
  * @returns {object} tx         See the return parameter of iterateRequestTxs docs for more info
  */
 function constructTransactionObject(currentTx) {
-  const tx = {
+  // Find currency by looking at which amount is provided
+  let currency;
+  if (parseFloat(currentTx.usd) !== 0) {
+    currency = 'USD';
+  } else if (parseFloat(currentTx.btc) !== 0) {
+    currency = 'BTC';
+  } else if (parseFloat(currentTx.eth) !== 0) {
+    currency = 'ETH';
+  }
+
+  return {
+    currency,
+    amount: currencyHelper.toSmallestSubunit(parseFloat(currentTx[currency.toLowerCase()]), currency),
     // Convert externalId to string
     externalId: String(currentTx.id),
     // Convert timestamp string to ISO-8601 string (Add '+0' to force UTC interpretation of 'datetime')
     timestamp: new Date(currentTx.datetime + '+0').toISOString(),
     // Bitstamp doesn't have the concept of tx states, so they are always 'completed'
     state: constants.STATE_COMPLETED,
-    amount: 0,
-    currency: '',
     type: parseInt(currentTx.type) === constants.TYPE_DEPOSIT ? 'deposit' : 'withdrawal',
     raw: currentTx
   };
-
-  if (parseFloat(currentTx.btc) === 0) {
-    tx.amount = currencyHelper.toSmallestSubunit(parseFloat(currentTx.usd), 'USD');
-    tx.currency = 'USD';
-  } else {
-    tx.amount = currencyHelper.toSmallestSubunit(parseFloat(currentTx.btc), 'BTC');
-    tx.currency = 'BTC';
-  }
-
-  return tx;
 }
 
 /**
@@ -686,8 +686,8 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
 Bitstamp.prototype.withdraw = async function(args) {
   const {amount, currency, address} = args;
 
-  if (currency !== 'BTC') {
-    throw constructError('Only BTC withdrawals are allowed');
+  if (!constants.SUPPORTED_WITHDRAW_CURRENCIES.includes(currency)) {
+    throw constructError(`Withdrawals are not allowed for ${currency}`);
   }
 
   // Convert sub units to real units
@@ -699,8 +699,10 @@ Bitstamp.prototype.withdraw = async function(args) {
   // Transform request function to a promise function
   const postFn = promisify(this._post).bind(this);
 
+  const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : 'v2/eth_withdrawal';
+
   // Call API
-  const {id: externalId} = await postFn('bitcoin_withdrawal', requestArgs);
+  const {id: externalId} = await postFn(requestUrl, requestArgs);
 
   // Construct and return response
   return {externalId, state: constants.STATE_PENDING};
