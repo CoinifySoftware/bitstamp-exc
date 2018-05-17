@@ -14,7 +14,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     clientId: 'clientId',
     host: 'http://localhost:3000'
   });
-  
+
   /* PLACE TRADE - sell order */
   describe('Place Trade endpoint - sell order', function () {
     let requestPostStub;
@@ -126,34 +126,6 @@ describe('Bitstamp Exchange Service Tests ->', function () {
     });
   });
 
-  /* =================   Testing wrong input to the endpoints   ================= */
-
-  /* GET ORDER BOOK - wrong currency input */
-  describe('Get Order Book endpoint', function () {
-    before(function (done) {
-      sinon.stub(request, 'get').yields(null, {}, JSON.stringify(responses.getOrderBookResponse));
-      done();
-    });
-
-    after(function (done) {
-      request.get.restore();
-      done();
-    });
-
-    it('returns an error about wrong currency input', function (done) {
-      bitstamp.getOrderBook('bStc', 'EUR', function (err, result) {
-        request.get.called.should.be.equal(false);
-
-        expect(result).to.equal(undefined);
-        expect(err.message).to.equal('Currency pair not supported');
-        expect(err.code).to.equal(errorCodes.MODULE_ERROR);
-        expect(err.cause).to.equal(undefined);
-
-        done();
-      });
-    });
-  });
-
   /* PLACE TRADE - wrong currency inputs */
   describe('Place Trade endpoint - wrong currency inputs', function () {
     before(function (done) {
@@ -170,7 +142,7 @@ describe('Bitstamp Exchange Service Tests ->', function () {
       bitstamp.placeTrade(-123456, 460.84, 'bStc', 'EUR', function (err, result) {
         request.post.called.should.be.equal(false);
         expect(result).to.equal(undefined);
-        expect(err.message).to.equal('Base and Quote currencies should be BTC and USD, respectively');
+        expect(err.message).to.equal('Currency pair not supported');
         expect(err.code).to.equal(errorCodes.MODULE_ERROR);
         expect(err.cause).to.equal(undefined);
 

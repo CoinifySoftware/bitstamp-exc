@@ -622,11 +622,13 @@ Bitstamp.prototype.listTrades = function (latestTrade) {
  * @param {function}    callback        Returns the customized data object of the placed trade object data
  */
 Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, quoteCurrency, callback) {
-  baseCurrency = baseCurrency.toUpperCase();
-  quoteCurrency = quoteCurrency.toUpperCase();
-  if (baseCurrency !== 'BTC' || quoteCurrency !== 'USD') {
-    return callback(constructError('Base and Quote currencies should be BTC and USD, respectively', errorCodes.MODULE_ERROR, null));
+  // First check if currency pair is supported
+  const currencyPair = baseCurrency.toLowerCase() + quoteCurrency.toLowerCase();
+  if (!constants.SUPPORTED_CURRENCY_PAIRS.includes(currencyPair)) {
+    return callback(constructError('Currency pair not supported',
+      errorCodes.MODULE_ERROR, null));
   }
+
   if (baseAmount === undefined || typeof baseAmount !== 'number' || baseAmount === 0) {
     return callback(constructError('The base amount must be a number.', errorCodes.MODULE_ERROR, null));
   }
@@ -641,22 +643,20 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
   /* The amount passed to the method is denominated in smallest sub-unit, but Bitstamp API requires
    * the amount to be in main-unit, so we convert it.
    */
-  const amountMainUnit = currencyHelper.fromSmallestSubunit(amountSubUnit, 'BTC');
+  const amountMainUnit = currencyHelper.fromSmallestSubunit(amountSubUnit, baseCurrency);
 
   /* Make the request */
-  this._post(orderType, {amount: amountMainUnit, price: limitPrice}, function (err, res) {
+  this._post(`v2/${orderType}/${currencyPair}`, {amount: amountMainUnit, price: limitPrice}, function (err, res) {
     if (err) {
       return callback(err);
     }
 
     /* Construct the custom trade response object */
     const trade = {
+      baseAmount, baseCurrency, quoteCurrency,
       externalId: res.id.toString(),
       type: 'limit',
       state: 'open',
-      baseAmount: baseAmount,
-      baseCurrency: 'BTC',
-      quoteCurrency: 'USD',
       limitPrice: limitPrice,
       raw: _.extend(res,
         {
