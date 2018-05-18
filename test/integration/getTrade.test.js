@@ -17,13 +17,16 @@ describe('#getTrade', () => {
   });
 
   let requestStub;
+  beforeEach(() => {
+    requestStub = sinon.stub(request, 'post');
+  });
+
   afterEach(() => {
     requestStub.restore();
   });
 
   it('should get sell trade', async () => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.getTradeSellResponse));
+    requestStub.yields(null, {}, JSON.stringify(responses.getTradeSellResponse));
     const trade = {
       baseCurrency: 'BTC',
       quoteCurrency: 'USD',
@@ -56,8 +59,7 @@ describe('#getTrade', () => {
   });
 
   it('should get buy order (BTC)', async () => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.getTradeBuyResponseBTC));
+    requestStub.yields(null, {}, JSON.stringify(responses.getTradeBuyResponseBTC));
 
     const trade = {
       baseCurrency: 'BTC',
@@ -89,6 +91,8 @@ describe('#getTrade', () => {
   });
 
   it('should get buy order (ETH)', async () => {
+    requestStub.yields(null, {}, JSON.stringify(responses.getTradeBuyResponseETH));
+
     const trade = {
       baseCurrency: 'ETH',
       quoteCurrency: 'USD',
@@ -99,10 +103,6 @@ describe('#getTrade', () => {
         datetime: '2015-09-03 11:40:46'
       }
     };
-
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.getTradeBuyResponseETH));
-
 
     const res = await promisify(bitstamp.getTrade.bind(bitstamp))(trade);
     expect(res).to.deep.equal({

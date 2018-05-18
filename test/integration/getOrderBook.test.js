@@ -15,14 +15,16 @@ describe('#getOrderBook', () => {
   });
 
   let requestStub;
+  beforeEach(() => {
+    requestStub = sinon.stub(request, 'get');
+  });
 
   afterEach(() => {
     requestStub.restore();
   });
 
   it('should get and return order book for BTCUSD', async () => {
-    requestStub = sinon.stub(request, 'get')
-      .yields(null, {}, JSON.stringify(responses.getOrderBookResponseUSD));
+    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseUSD));
 
     const baseCurrency = 'BTC';
     const quoteCurrency = 'USD';
@@ -47,8 +49,7 @@ describe('#getOrderBook', () => {
   });
 
   it('should get and return order book for ETHUSD', async () => {
-    requestStub = sinon.stub(request, 'get')
-      .yields(null, {}, JSON.stringify(responses.getOrderBookResponseETH));
+    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseETH));
 
     const baseCurrency = 'ETH';
     const quoteCurrency = 'USD';
