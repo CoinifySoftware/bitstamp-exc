@@ -1,4 +1,5 @@
 const chai = require('chai'),
+  _ = require('lodash'),
   expect = chai.expect,
   sinon = require('sinon'),
   request = require('request'),
@@ -23,21 +24,35 @@ describe('withdraw', function() {
     };
 
     requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify({id: 'bitstamp_id'}));
+      .yields(null, {}, JSON.stringify({ id: 'bitstamp_id' }));
   });
 
   afterEach(() => {
     requestStub.restore();
   });
 
-  it('should call bitstamp api and return response', async () => {
+  it('should call bitstamp api and return response for BTC withdrawal', async () => {
     const withdrawal = await bitstamp.withdraw(args);
 
     expect(requestStub.calledOnce).to.equal(true);
-    const [requestArgs] = requestStub.firstCall.args;
+    const [ requestArgs ] = requestStub.firstCall.args;
     expect(requestArgs.url).to.equal('http://localhost:3000/api/bitcoin_withdrawal/');
     expect(requestArgs.form.address).to.equal(args.address);
     expect(requestArgs.form.amount).to.equal(0.1);
+    expect(withdrawal).to.deep.equal({
+      externalId: 'bitstamp_id',
+      state: 'pending'
+    });
+  });
+
+  it('should call bitstamp and return response for ETH withdrawal', async () => {
+    const withdrawal = await bitstamp.withdraw(_.defaults({ currency: 'ETH' }, args));
+
+    expect(requestStub.calledOnce).to.equal(true);
+    const [ requestArgs ] = requestStub.firstCall.args;
+    expect(requestArgs.url).to.equal('http://localhost:3000/api/v2/eth_withdrawal/');
+    expect(requestArgs.form.address).to.equal(args.address);
+    expect(requestArgs.form.amount).to.equal(0.00001);
     expect(withdrawal).to.deep.equal({
       externalId: 'bitstamp_id',
       state: 'pending'
@@ -48,7 +63,7 @@ describe('withdraw', function() {
     args.currency = 'USD';
 
     return expect(bitstamp.withdraw(args)).to.eventually
-      .be.rejectedWith('Only BTC withdrawals are allowed')
+      .be.rejectedWith('Withdrawals are not allowed for USD')
       .and.be.an.instanceOf(Error);
   });
 });

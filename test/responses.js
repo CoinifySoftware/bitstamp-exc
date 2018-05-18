@@ -20,19 +20,34 @@ const getBalanceResponse =
   usd_reserved: '0.0',
   btc_balance: '0.12345678',
   usd_balance: '51.00',
-  usd_available: '49.00'
+  usd_available: '49.00',
+  eth_available: '0.1',
+  eth_balance: '0.2'
 };
 
-const getOrderBookResponse =
+const getOrderBookResponseUSD =
 {
   timestamp: '1455629907',
   bids: [
-    ['403.53', '0.81383821'],
-    ['403.35', '1.61018019']
+    [ '403.53', '0.81383821' ],
+    [ '403.35', '1.61018019' ]
   ],
   asks: [
-    ['404.00', '19.67704402'],
-    ['404.39', '7.36300000']
+    [ '404.00', '19.67704402' ],
+    [ '404.39', '7.36300000' ]
+  ]
+};
+
+const getOrderBookResponseETH =
+{
+  timestamp: '1455629907',
+  bids: [
+    [ '700.50', '0.08' ],
+    [ '699.11', '1' ]
+  ],
+  asks: [
+    [ '700.00', '0.7' ],
+    [ '710.39', '1.1' ]
   ]
 };
 
@@ -57,7 +72,7 @@ const getTradeSellResponse =
   ]
 };
 
-const getTradeBuyResponse =
+const getTradeBuyResponseBTC =
 {
   status: 'Finished',
   transactions: [
@@ -78,39 +93,64 @@ const getTradeBuyResponse =
   ]
 };
 
+const getTradeBuyResponseETH = {
+  status: 'Finished',
+  transactions: [
+    {
+      usd: '9.96999733',
+      price: '686.99000000',
+      datetime: '2018-05-16 09:11:20',
+      fee: '0.03000000',
+      tid: 12356,
+      eth: '0.01451258',
+      type: 2
+    }
+  ]
+};
+
 const listTransactionsResponse =
   [
-    {usd: '-124.37',
-      btc: '0.04906037',
-      btc_usd: '2535.01',
-      order_id: 24870681,
-      fee: '0.14000000',
-      type: 2,
-      id: 16180467,
-      datetime: '2017-06-14 20:28:33'},
-    {usd: '-249.26',
-      btc: '0.09790521',
-      btc_usd: '2545.96',
-      order_id: 24882718,
-      fee: '0.28000000',
-      type: 2,
-      id: 16181386,
-      datetime: '2016-06-14 20:46:46'},
-    {usd: '-55.21',
-      btc: '0.02174610',
-      btc_usd: '2538.97',
-      order_id: 24880122,
-      fee: '0.07000000',
-      type: 2,
-      id: 16181233,
-      datetime: '2016-06-14 20:42:58'},
+    {
+      fee: '0.00000000',
+      btc_usd: '0.00',
+      datetime: '2018-05-17 14:50:43',
+      usd: 0,
+      btc: 0,
+      eth: '-0.01451258',
+      type: '1',
+      id: 66231357,
+      eur: 0
+    },
+    {
+      usd: '-9.97',
+      order_id: 1234,
+      datetime: '2018-05-16 09:11:20',
+      fee: '0.03',
+      btc: 0,
+      eth: '0.01451258',
+      eth_usd: 686.99,
+      type: '2',
+      id: 4321,
+      eur: 0
+    },
+    {
+      usd: '-9.97',
+      btc_usd: 8225.14,
+      order_id: 1235,
+      datetime: '2018-05-16 09:11:03',
+      fee: '0.03',
+      btc: '0.00121213',
+      type: '2',
+      id: 4322,
+      eur: 0
+    },
     {
       usd: '-0.00',
       btc: '0.10000000',
       btc_usd: '0.00',
       order_id: null,
       fee: '0.00',
-      type: 0,
+      type: '0',
       id: 10609931,
       datetime: '2016-02-15 12:25:49'
     },
@@ -120,7 +160,7 @@ const listTransactionsResponse =
       btc_usd: '0.00',
       order_id: null,
       fee: '0.00',
-      type: 1,
+      type: '1',
       id: 9214142,
       datetime: '2015-09-03 11:40:46'
     },
@@ -130,7 +170,7 @@ const listTransactionsResponse =
       btc_usd: '0.00',
       order_id: null,
       fee: '0.00',
-      type: 0,
+      type: '0',
       id: 9214109,
       datetime: '2015-09-03 11:30:40'
     },
@@ -140,7 +180,7 @@ const listTransactionsResponse =
       btc_usd: '0.00',
       order_id: null,
       fee: '0.00',
-      type: 3,
+      type: '3',
       id: 9099290,
       datetime: '2015-08-18 14:05:53'
     }
@@ -158,23 +198,23 @@ const placeTradeResponse =
 const placeBuyTradeInsufficientFundsResponse =
   {
     error: {
-      __all__: ['You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.']
+      __all__: [ 'You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.' ]
     }
   };
 
 const placeSellTradeInsufficientFundsResponse =
   {
     error: {
-      __all__: ['You have only 0.14141414 BTC available. Check your account balance for details.']
+      __all__: [ 'You have only 0.14141414 BTC available. Check your account balance for details.' ]
     }
   };
 
 module.exports = {
   getTickerResponse: getTickerResponse,
   getBalanceResponse: getBalanceResponse,
-  getOrderBookResponse: getOrderBookResponse,
+  getOrderBookResponseUSD, getOrderBookResponseETH,
   getTradeSellResponse: getTradeSellResponse,
-  getTradeBuyResponse: getTradeBuyResponse,
+  getTradeBuyResponseBTC, getTradeBuyResponseETH,
   listTransactionsResponse: listTransactionsResponse,
   placeTradeResponse: placeTradeResponse,
   placeBuyTradeInsufficientFundsResponse: placeBuyTradeInsufficientFundsResponse,
