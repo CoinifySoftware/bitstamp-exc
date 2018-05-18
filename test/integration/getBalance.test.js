@@ -92,7 +92,21 @@ describe('#getBalance', () => {
 
       done();
     });
+  });
 
+  it('should return error if data contains status with error message', (done) => {
+    const response = { status: 'error', reason: 'Invalid signature', code: 'API0005' };
+
+    requestStub.yields(null, {}, JSON.stringify(response));
+
+    bitstamp.getBalance((err) => {
+      expect(err.message).to.equal('There is an error in the body of the response from the exchange service...');
+      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
+      expect(err.cause).to.be.an('Error');
+      expect(err.cause.message).to.equal(JSON.stringify(response));
+
+      done();
+    });
   });
 
 });

@@ -25,6 +25,32 @@ describe('#placeTrade', () => {
     requestStub.restore();
   });
 
+  it('should round price to 2 decimals before placing trade', async () => {
+    requestStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));
+
+    const baseAmount = -1250000; // negative means sell
+    const limit = 460.123;
+    const baseCurrency = 'BTC';
+    const quoteCurrency = 'USD';
+
+    const res = await promisify(bitstamp.placeTrade.bind(bitstamp))(baseAmount, limit, baseCurrency, quoteCurrency);
+    expect(res).to.deep.equal({
+      baseAmount: -1250000,
+      baseCurrency: 'BTC',
+      quoteCurrency: 'USD',
+      externalId: '111788524',
+      type: 'limit',
+      state: 'open',
+      limitPrice: 460.12,
+      raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_SELL_ORDER })
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/sell/btcusd/');
+    expect(requestStub.firstCall.args[0].form.amount).to.equal(0.0125);
+    expect(requestStub.firstCall.args[0].form.price).to.equal(460.12);
+  });
+
   it('should place a sell trade (BTC) on the exchange and return response', async () => {
     requestStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));
 
@@ -81,7 +107,7 @@ describe('#placeTrade', () => {
     requestStub.yields(null, {}, JSON.stringify(responses.placeTradeResponse));
 
     const baseAmount = -1250000; // negative means sell
-    const limit = 700.99123;
+    const limit = 700.919;
     const baseCurrency = 'ETH';
     const quoteCurrency = 'USD';
 
@@ -93,14 +119,14 @@ describe('#placeTrade', () => {
       externalId: '111788524',
       type: 'limit',
       state: 'open',
-      limitPrice: 700.99123,
+      limitPrice: 700.92,
       raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_SELL_ORDER })
     });
 
     expect(requestStub.calledOnce).to.equal(true);
     expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/sell/ethusd/');
     expect(requestStub.firstCall.args[0].form.amount).to.equal(0.00000125);
-    expect(requestStub.firstCall.args[0].form.price).to.equal(700.99123);
+    expect(requestStub.firstCall.args[0].form.price).to.equal(700.92);
   });
 
   it('should place a buy trade (ETH) on the exchange and return response', async () => {
