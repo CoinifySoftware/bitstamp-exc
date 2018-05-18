@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha test/**/*.test.js",
+    "test-watch": "./node_modules/.bin/mocha --recursive --watch --watch-extensions js test/**/*",
     "lint": "eslint --color .",
     "lint-fix": "eslint --fix .",
     "build": "npm i && npm run lint && npm test"

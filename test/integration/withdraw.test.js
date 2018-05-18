@@ -1,9 +1,9 @@
 const chai = require('chai'),
-  _ = require('lodash');
-expect = chai.expect,
-sinon = require('sinon'),
-request = require('request'),
-Bitstamp = require('../../index.js');
+  _ = require('lodash'),
+  expect = chai.expect,
+  sinon = require('sinon'),
+  request = require('request'),
+  Bitstamp = require('../../index.js');
 
 chai.use(require('chai-as-promised'));
 
