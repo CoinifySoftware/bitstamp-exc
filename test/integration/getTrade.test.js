@@ -124,7 +124,7 @@ describe('#getTrade', () => {
 
   it('should return error when baseCurrency is missing', (done) => {
     bitstamp.getTrade({}, (err) => {
-      expect(err.message).to.equal('Trade object requires raw, baseCurrency, quoteCurrency and feeCurrency provided');
+      expect(err.message).to.equal('Trade object requires raw, baseCurrency and quoteCurrency provided');
       expect(err.code).to.equal(errorCodes.MODULE_ERROR);
       expect(err.cause).to.equal(undefined);
 

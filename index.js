@@ -50,7 +50,7 @@ Bitstamp.prototype._post = function (action, params, callback) {
   }
 
   if (!this.key || !this.secret || !this.clientId) {
-    return callback('Must provide key, secret and client ID to make this API request.'); 
+    return callback('Must provide key, secret and client ID to make this API request.');
   }
 
   const path = '/api/' + action + '/';
@@ -112,12 +112,17 @@ Bitstamp.prototype._request = function (params, callback) {
         errorCodes.MODULE_ERROR, e));
     }
 
+    if (data.status === 'error') {
+      return callback(constructError('There is an error in the body of the response from the exchange service...',
+        errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data))));
+    }
+
     /* Error response was never received when making the GET request, and the API docs don't mention anything about
      * errors, so we can only assume that the error response from a GET request has the same structure as the one
      * from the POST request (which has been received while dev/testing and we know how it looks).
      * Therefore, the implementation is based on this assumption.
      */
-    if (data.error) {
+    if (data.error || data.status === 'error') {
       let error = constructError('There is an error in the body of the response from the exchange service...',
         errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
 
@@ -479,10 +484,10 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
   }
 
   // Extract from trade
-  const { baseCurrency, quoteCurrency, feeCurrency, raw } = trade;
+  const { baseCurrency, quoteCurrency, raw } = trade;
 
-  if (!baseCurrency || !quoteCurrency || !feeCurrency || !raw) {
-    return callback(constructError('Trade object requires raw, baseCurrency, quoteCurrency and feeCurrency provided',
+  if (!baseCurrency || !quoteCurrency || !raw) {
+    return callback(constructError('Trade object requires raw, baseCurrency and quoteCurrency provided',
       errorCodes.MODULE_ERROR, null));
   }
 
@@ -508,6 +513,7 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
       return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
     });
 
+    const feeCurrency = 'USD'; // Fee is always USD for bitstamp
     const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
 
     const order = {
@@ -643,10 +649,11 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
   /* The amount passed to the method is denominated in smallest sub-unit, but Bitstamp API requires
    * the amount to be in main-unit, so we convert it.
    */
-  const amountMainUnit = currencyHelper.fromSmallestSubunit(amountSubUnit, baseCurrency);
+  const amount = currencyHelper.fromSmallestSubunit(amountSubUnit, baseCurrency);
+  const price = _.round(limitPrice, 2);
 
   /* Make the request */
-  this._post(`v2/${orderType}/${currencyPair}`, { amount: amountMainUnit, price: limitPrice }, function (err, res) {
+  this._post(`v2/${orderType}/${currencyPair}`, { amount, price }, function (err, res) {
     if (err) {
       return callback(err);
     }
@@ -657,7 +664,7 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
       externalId: res.id.toString(),
       type: 'limit',
       state: 'open',
-      limitPrice: limitPrice,
+      limitPrice: price,
       raw: _.extend(res,
         {
           orderType: orderType
