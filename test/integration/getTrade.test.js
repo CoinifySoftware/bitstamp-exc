@@ -1,6 +1,6 @@
 const expect = require('chai').expect,
   _ = require('lodash'),
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   sinon = require('sinon'),
   responses = require('./../responses.js'),
   errorCodes = require('../../lib/error_codes'),
@@ -50,7 +50,7 @@ describe('#getTrade', () => {
       quoteCurrency: 'USD',
       feeAmount: 1928,
       feeCurrency: 'USD',
-      raw: _.defaults(responses.getTradeSellResponse, {id: trade.raw.id})
+      raw: _.defaults(responses.getTradeSellResponse, { id: trade.raw.id })
     });
 
     expect(requestStub.calledOnce).to.equal(true);
@@ -83,7 +83,7 @@ describe('#getTrade', () => {
       quoteCurrency: 'USD',
       feeAmount: 1928,
       feeCurrency: 'USD',
-      raw: _.defaults(responses.getTradeBuyResponseBTC, {id: trade.raw.id})
+      raw: _.defaults(responses.getTradeBuyResponseBTC, { id: trade.raw.id })
     });
 
     expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/order_status/');
@@ -115,7 +115,7 @@ describe('#getTrade', () => {
       baseAmount: 14512580000,
       quoteAmount: -997,
       feeAmount: 3,
-      raw: _.defaults(responses.getTradeBuyResponseETH, {id: trade.raw.id})
+      raw: _.defaults(responses.getTradeBuyResponseETH, { id: trade.raw.id })
     });
 
     expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/order_status/');

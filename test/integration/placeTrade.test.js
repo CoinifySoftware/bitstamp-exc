@@ -1,5 +1,5 @@
 const expect = require('chai').expect,
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   _ = require('lodash'),
   sinon = require('sinon'),
   responses = require('./../responses.js'),
@@ -42,7 +42,7 @@ describe('#placeTrade', () => {
       type: 'limit',
       state: 'open',
       limitPrice: 460,
-      raw: _.extend(responses.placeTradeResponse, {orderType: constants.TYPE_SELL_ORDER})
+      raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_SELL_ORDER })
     });
 
     expect(requestStub.calledOnce).to.equal(true);
@@ -68,7 +68,7 @@ describe('#placeTrade', () => {
       type: 'limit',
       state: 'open',
       limitPrice: 455,
-      raw: _.extend(responses.placeTradeResponse, {orderType: constants.TYPE_BUY_ORDER})
+      raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_BUY_ORDER })
     });
 
     expect(requestStub.calledOnce).to.equal(true);
@@ -94,7 +94,7 @@ describe('#placeTrade', () => {
       type: 'limit',
       state: 'open',
       limitPrice: 700.99123,
-      raw: _.extend(responses.placeTradeResponse, {orderType: constants.TYPE_SELL_ORDER})
+      raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_SELL_ORDER })
     });
 
     expect(requestStub.calledOnce).to.equal(true);
@@ -120,7 +120,7 @@ describe('#placeTrade', () => {
       type: 'limit',
       state: 'open',
       limitPrice: 1230,
-      raw: _.extend(responses.placeTradeResponse, {orderType: constants.TYPE_BUY_ORDER})
+      raw: _.extend(responses.placeTradeResponse, { orderType: constants.TYPE_BUY_ORDER })
     });
 
     expect(requestStub.calledOnce).to.equal(true);

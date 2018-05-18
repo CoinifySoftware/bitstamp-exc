@@ -3,7 +3,7 @@ const request = require('request'),
   crypto = require('crypto'),
   currencyHelper = require('@coinify/currency'),
   async = require('async'),
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   errorCodes = require('./lib/error_codes.js'),
   constants = require('./lib/constants.js');
 
@@ -49,8 +49,9 @@ Bitstamp.prototype._post = function (action, params, callback) {
     callback = params;
   }
 
-  if (!this.key || !this.secret || !this.clientId)
-  { return callback('Must provide key, secret and client ID to make this API request.'); }
+  if (!this.key || !this.secret || !this.clientId) {
+    return callback('Must provide key, secret and client ID to make this API request.'); 
+  }
 
   const path = '/api/' + action + '/';
   const nonce = new Date().getTime()*10;
@@ -90,7 +91,7 @@ const REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS =
  */
 Bitstamp.prototype._request = function (params, callback) {
   params = _.defaultsDeep({
-    headers: {'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)'}
+    headers: { 'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)' }
   }, params);
 
   const requestFunction = function (err, res, body) {
@@ -172,7 +173,7 @@ function iterateRequestTxs(self, earliestDate, callback) {
 
   /* The POST request function to be called arbitrary number of times in async.doWhilst() */
   const post = function (asyncCallback) {
-    self._post('v2/user_transactions', {limit: BITSTAMP_REQUEST_LIMIT, offset: offset, sort: 'desc'},
+    self._post('v2/user_transactions', { limit: BITSTAMP_REQUEST_LIMIT, offset: offset, sort: 'desc' },
       function (err, res) {
         if (err) {
           continueIteration = false;
@@ -478,7 +479,7 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
   }
 
   // Extract from trade
-  const {baseCurrency, quoteCurrency, feeCurrency, raw} = trade;
+  const { baseCurrency, quoteCurrency, feeCurrency, raw } = trade;
 
   if (!baseCurrency || !quoteCurrency || !feeCurrency || !raw) {
     return callback(constructError('Trade object requires raw, baseCurrency, quoteCurrency and feeCurrency provided',
@@ -486,14 +487,14 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
   }
 
   // Extract from raw
-  const {orderType, id} = raw;
+  const { orderType, id } = raw;
 
   if (orderType !== constants.TYPE_SELL_ORDER && orderType !== constants.TYPE_BUY_ORDER) {
     return callback(constructError('Trade object must have a raw orderType parameter with value either \'sell\' or' +
       ' \'buy\'.', errorCodes.MODULE_ERROR, null));
   }
 
-  this._post('order_status', {id}, (err, res) => {
+  this._post('order_status', { id }, (err, res) => {
     if (err) {
       return callback(err);
     }
@@ -518,7 +519,7 @@ Bitstamp.prototype.getTrade = function (trade, callback) {
       quoteAmount: _.sum(quoteAmounts),
       feeAmount: _.sum(feeAmounts),
       // Add ID to raw result
-      raw: _.defaults(res, {id})
+      raw: _.defaults(res, { id })
     };
 
     return callback(null, order);
@@ -567,11 +568,10 @@ Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
 Bitstamp.prototype.listTrades = function (latestTrade) {
   let latestTxDate = new Date(0);
   if (latestTrade) {
-    const {raw} = latestTrade;
+    const { raw } = latestTrade;
     if (raw.transactions) {
       latestTxDate = new Date(raw.transactions[0].datetime);
-    }
-    else {
+    } else {
       latestTxDate = new Date(latestTrade.raw.datetime);
     }
   }
@@ -646,7 +646,7 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
   const amountMainUnit = currencyHelper.fromSmallestSubunit(amountSubUnit, baseCurrency);
 
   /* Make the request */
-  this._post(`v2/${orderType}/${currencyPair}`, {amount: amountMainUnit, price: limitPrice}, function (err, res) {
+  this._post(`v2/${orderType}/${currencyPair}`, { amount: amountMainUnit, price: limitPrice }, function (err, res) {
     if (err) {
       return callback(err);
     }
@@ -684,7 +684,7 @@ Bitstamp.prototype.placeTrade = function (baseAmount, limitPrice, baseCurrency, 
  *                                 }
  */
 Bitstamp.prototype.withdraw = async function(args) {
-  const {amount, currency, address} = args;
+  const { amount, currency, address } = args;
 
   if (!constants.SUPPORTED_WITHDRAW_CURRENCIES.includes(currency)) {
     throw constructError(`Withdrawals are not allowed for ${currency}`);
@@ -694,7 +694,7 @@ Bitstamp.prototype.withdraw = async function(args) {
   const amountRealUnit = currencyHelper.fromSmallestSubunit(amount, currency);
 
   // Construct request object
-  const requestArgs = {address, amount: amountRealUnit, instant: 0};
+  const requestArgs = { address, amount: amountRealUnit, instant: 0 };
 
   // Transform request function to a promise function
   const postFn = promisify(this._post).bind(this);
@@ -702,10 +702,10 @@ Bitstamp.prototype.withdraw = async function(args) {
   const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : 'v2/eth_withdrawal';
 
   // Call API
-  const {id: externalId} = await postFn(requestUrl, requestArgs);
+  const { id: externalId } = await postFn(requestUrl, requestArgs);
 
   // Construct and return response
-  return {externalId, state: constants.STATE_PENDING};
+  return { externalId, state: constants.STATE_PENDING };
 };
 
 module.exports = Bitstamp;

@@ -1,5 +1,5 @@
 const expect = require('chai').expect,
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   sinon = require('sinon'),
   responses = require('./../responses.js'),
   request = require('request'),

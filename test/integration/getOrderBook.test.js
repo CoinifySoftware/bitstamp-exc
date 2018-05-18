@@ -1,5 +1,5 @@
 const expect = require('chai').expect,
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   sinon = require('sinon'),
   responses = require('./../responses.js'),
   request = require('request'),
@@ -35,12 +35,12 @@ describe('#getOrderBook', () => {
       baseCurrency: 'BTC',
       quoteCurrency: 'USD',
       bids: [
-        {price: 403.53, baseAmount: 81383821},
-        {price: 403.35, baseAmount: 161018019}
+        { price: 403.53, baseAmount: 81383821 },
+        { price: 403.35, baseAmount: 161018019 }
       ],
       asks: [
-        {price: 404, baseAmount: 1967704402},
-        {price: 404.39, baseAmount: 736300000}
+        { price: 404, baseAmount: 1967704402 },
+        { price: 404.39, baseAmount: 736300000 }
       ]
     });
 
@@ -60,12 +60,12 @@ describe('#getOrderBook', () => {
       baseCurrency: 'ETH',
       quoteCurrency: 'USD',
       bids: [
-        {price: 700.5, baseAmount: 80000000000},
-        {price: 699.11, baseAmount: 1000000000000}
+        { price: 700.5, baseAmount: 80000000000 },
+        { price: 699.11, baseAmount: 1000000000000 }
       ],
       asks: [
-        {price: 700, baseAmount: 700000000000},
-        {price: 710.39, baseAmount: 1100000000000}
+        { price: 700, baseAmount: 700000000000 },
+        { price: 710.39, baseAmount: 1100000000000 }
       ]
     });
 

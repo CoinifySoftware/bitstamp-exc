@@ -1,5 +1,5 @@
 const expect = require('chai').expect,
-  {promisify} = require('util'),
+  { promisify } = require('util'),
   sinon = require('sinon'),
   responses = require('./../responses.js'),
   errorCodes = require('../../lib/error_codes'),
@@ -67,7 +67,7 @@ describe('#getBalance', () => {
 
   it('should return error if response contains errorMessage', (done) => {
     const exchangeError = new Error('Some random test error');
-    requestStub.yields(null, {error: exchangeError}, JSON.stringify(responses.getBalanceResponse));
+    requestStub.yields(null, { error: exchangeError }, JSON.stringify(responses.getBalanceResponse));
 
 
     bitstamp.getBalance((err) => {
@@ -82,7 +82,7 @@ describe('#getBalance', () => {
   it('should return error if data contains errorMessage', (done) => {
     const exchangeErrorMsg = 'Some random test error';
 
-    requestStub.yields(null, {}, JSON.stringify({error: exchangeErrorMsg}));
+    requestStub.yields(null, {}, JSON.stringify({ error: exchangeErrorMsg }));
 
     bitstamp.getBalance((err) => {
       expect(err.message).to.equal('There is an error in the body of the response from the exchange service...');

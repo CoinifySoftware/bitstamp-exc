@@ -29,12 +29,12 @@ const getOrderBookResponseUSD =
 {
   timestamp: '1455629907',
   bids: [
-    ['403.53', '0.81383821'],
-    ['403.35', '1.61018019']
+    [ '403.53', '0.81383821' ],
+    [ '403.35', '1.61018019' ]
   ],
   asks: [
-    ['404.00', '19.67704402'],
-    ['404.39', '7.36300000']
+    [ '404.00', '19.67704402' ],
+    [ '404.39', '7.36300000' ]
   ]
 };
 
@@ -42,12 +42,12 @@ const getOrderBookResponseETH =
 {
   timestamp: '1455629907',
   bids: [
-    ['700.50', '0.08'],
-    ['699.11', '1']
+    [ '700.50', '0.08' ],
+    [ '699.11', '1' ]
   ],
   asks: [
-    ['700.00', '0.7'],
-    ['710.39', '1.1']
+    [ '700.00', '0.7' ],
+    [ '710.39', '1.1' ]
   ]
 };
 
@@ -198,14 +198,14 @@ const placeTradeResponse =
 const placeBuyTradeInsufficientFundsResponse =
   {
     error: {
-      __all__: ['You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.']
+      __all__: [ 'You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.' ]
     }
   };
 
 const placeSellTradeInsufficientFundsResponse =
   {
     error: {
-      __all__: ['You have only 0.14141414 BTC available. Check your account balance for details.']
+      __all__: [ 'You have only 0.14141414 BTC available. Check your account balance for details.' ]
     }
   };
 

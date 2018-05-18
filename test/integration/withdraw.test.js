@@ -24,7 +24,7 @@ describe('withdraw', function() {
     };
 
     requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify({id: 'bitstamp_id'}));
+      .yields(null, {}, JSON.stringify({ id: 'bitstamp_id' }));
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe('withdraw', function() {
     const withdrawal = await bitstamp.withdraw(args);
 
     expect(requestStub.calledOnce).to.equal(true);
-    const [requestArgs] = requestStub.firstCall.args;
+    const [ requestArgs ] = requestStub.firstCall.args;
     expect(requestArgs.url).to.equal('http://localhost:3000/api/bitcoin_withdrawal/');
     expect(requestArgs.form.address).to.equal(args.address);
     expect(requestArgs.form.amount).to.equal(0.1);
@@ -46,10 +46,10 @@ describe('withdraw', function() {
   });
 
   it('should call bitstamp and return response for ETH withdrawal', async () => {
-    const withdrawal = await bitstamp.withdraw(_.defaults({currency: 'ETH'}, args));
+    const withdrawal = await bitstamp.withdraw(_.defaults({ currency: 'ETH' }, args));
 
     expect(requestStub.calledOnce).to.equal(true);
-    const [requestArgs] = requestStub.firstCall.args;
+    const [ requestArgs ] = requestStub.firstCall.args;
     expect(requestArgs.url).to.equal('http://localhost:3000/api/v2/eth_withdrawal/');
     expect(requestArgs.form.address).to.equal(args.address);
     expect(requestArgs.form.amount).to.equal(0.00001);
