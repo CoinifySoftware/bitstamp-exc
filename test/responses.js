@@ -183,6 +183,17 @@ const listTransactionsResponse =
       type: '3',
       id: 9099290,
       datetime: '2015-08-18 14:05:53'
+    },
+    // EUR transaction
+    {
+      fee: '0.90',
+      btc_usd: '0.00',
+      datetime: '2018-07-10 09:23:01',
+      usd: 0,
+      btc: 0,
+      type: '1',
+      id: 69854588,
+      eur: '-52486.85'
     }
   ];
 

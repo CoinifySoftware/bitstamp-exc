@@ -246,11 +246,13 @@ function iterateRequestTxs(self, earliestDate, callback) {
 function constructTransactionObject(currentTx) {
   // Find currency by looking at which amount is provided
   let currency;
-  if (parseFloat(currentTx.usd) !== 0) {
+  if (currentTx.usd && parseFloat(currentTx.usd) !== 0) {
     currency = 'USD';
-  } else if (parseFloat(currentTx.btc) !== 0) {
+  } else if (currentTx.eur && parseFloat(currentTx.eur) !== 0) {
+    currency = 'EUR';
+  } else if (currentTx.btc && parseFloat(currentTx.btc) !== 0) {
     currency = 'BTC';
-  } else if (parseFloat(currentTx.eth) !== 0) {
+  } else if (currentTx.eth && parseFloat(currentTx.eth) !== 0) {
     currency = 'ETH';
   }
 

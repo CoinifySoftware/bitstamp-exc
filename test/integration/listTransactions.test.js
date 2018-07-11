@@ -63,6 +63,15 @@ describe('#listTransactions', () => {
         state: 'completed',
         type: 'deposit',
         raw: responses.listTransactionsResponse[5]
+      },
+      {
+        currency: 'EUR',
+        amount: -5248685,
+        externalId: '69854588',
+        timestamp: '2018-07-10T09:23:01.000Z',
+        state: 'completed',
+        type: 'withdrawal',
+        raw: responses.listTransactionsResponse[7]
       }
     ]);
 
