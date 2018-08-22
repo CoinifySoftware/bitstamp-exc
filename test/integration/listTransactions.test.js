@@ -24,7 +24,7 @@ describe('#listTransactions', () => {
     requestStub.restore();
   });
 
-  it.only('should return error if currency cannot be found', (done) => {
+  it('should return error if currency cannot be found', (done) => {
     const response = [ {
       fee: '0.00000000',
       datetime: '2018-05-17 14:50:43',
