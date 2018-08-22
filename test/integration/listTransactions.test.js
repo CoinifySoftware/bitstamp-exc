@@ -24,6 +24,24 @@ describe('#listTransactions', () => {
     requestStub.restore();
   });
 
+  it.only('should return error if currency cannot be found', (done) => {
+    const response = [ {
+      fee: '0.00000000',
+      datetime: '2018-05-17 14:50:43',
+      type: '1',
+      id: 66231357
+    } ];
+
+    requestStub
+      .yields(null, {}, JSON.stringify(response));
+
+    return bitstamp.listTransactions(null, (err, response) => {
+      expect(err).to.not.equal(null);
+      expect(response).to.equal(undefined);
+      done();
+    });
+  });
+
   it('should get all transactions', async () => {
     const res = await promisify(bitstamp.listTransactions.bind(bitstamp))(null);
 
