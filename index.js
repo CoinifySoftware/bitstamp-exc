@@ -15,6 +15,9 @@ const Bitstamp = function (settings) {
   this.clientId = settings.clientId;
   this.host = settings.host || constants.HOST;
   this.timeout = settings.timeout || constants.REQUEST_TIMEOUT;
+
+  /* eslint-disable */
+  this.log = settings.log || require('console-log-level')({});
 };
 
 /* =================   Helper methods   ================= */
@@ -558,8 +561,13 @@ Bitstamp.prototype.listTransactions = function (latestTransaction, callback) {
     if (err) {
       return callback(err);
     }
-    transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_DEPOSIT || parseInt(tx.type) === constants.TYPE_WITHDRAWAL);
-    transactions = transactions.map(constructTransactionObject);
+    try {
+      transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_DEPOSIT || parseInt(tx.type) === constants.TYPE_WITHDRAWAL);
+      transactions = transactions.map(constructTransactionObject);
+    } catch(err) {
+      this.log.error({err, transactionsRaw: JSON.stringify(transactions)}, 'Error parsing transactions');
+      return callback(err);
+    }
     return callback(null, transactions);
   });
 };

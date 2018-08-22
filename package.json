@@ -1,6 +1,6 @@
 {
   "name": "bitstamp-exc",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "An NPM package for utilizing the Bitstamp exchange API",
   "main": "index.js",
   "scripts": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "@coinify/currency": "^1.0.2",
     "async": "^2.6.0",
+    "console-log-level": "^1.4.0",
     "lodash": "^4.17.10",
     "request": "^2.86.0"
   },
