@@ -24,7 +24,7 @@ describe('#getOrderBook', () => {
   });
 
   it('should get and return order book for BTCUSD', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseUSD));
+    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseBTC));
 
     const baseCurrency = 'BTC';
     const quoteCurrency = 'USD';
@@ -46,6 +46,31 @@ describe('#getOrderBook', () => {
 
     expect(requestStub.calledOnce).to.equal(true);
     expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/order_book/btcusd/');
+  });
+
+  it('should get and return order book for BCHUSD', async () => {
+    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseBTC));
+
+    const baseCurrency = 'BCH';
+    const quoteCurrency = 'USD';
+
+    const res = await promisify(bitstamp.getOrderBook.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+    expect(res).to.deep.equal({
+      baseCurrency: 'BCH',
+      quoteCurrency: 'USD',
+      bids: [
+        { price: 403.53, baseAmount: 81383821 },
+        { price: 403.35, baseAmount: 161018019 }
+      ],
+      asks: [
+        { price: 404, baseAmount: 1967704402 },
+        { price: 404.39, baseAmount: 736300000 }
+      ]
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/order_book/bchusd/');
   });
 
   it('should get and return order book for ETHUSD', async () => {

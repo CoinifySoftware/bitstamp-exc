@@ -27,7 +27,7 @@ const getBalanceResponse =
   bch_balance: '0.21'
 };
 
-const getOrderBookResponseUSD =
+const getOrderBookResponseBTC =
 {
   timestamp: '1455629907',
   bids: [
@@ -249,7 +249,7 @@ const placeSellTradeInsufficientFundsResponse =
 module.exports = {
   getTickerResponse: getTickerResponse,
   getBalanceResponse: getBalanceResponse,
-  getOrderBookResponseUSD, getOrderBookResponseETH,
+  getOrderBookResponseBTC, getOrderBookResponseETH,
   getTradeSellResponse: getTradeSellResponse,
   getTradeBuyResponseBTC, getTradeBuyResponseETH,
   listTransactionsResponse: listTransactionsResponse,
