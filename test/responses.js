@@ -194,6 +194,18 @@ const listTransactionsResponse =
       type: '1',
       id: 69854588,
       eur: '-52486.85'
+    },
+    // BCH transaction
+    {
+      fee: '0.00000000',
+      bch: '0.03655347',
+      btc_usd: '0.00',
+      datetime: '2018-08-22 11:46:13',
+      usd: 0,
+      btc: 0,
+      type: '0',
+      id: 72759801,
+      eur: 0
     }
   ];
 

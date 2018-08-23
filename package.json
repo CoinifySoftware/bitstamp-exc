@@ -22,7 +22,7 @@
     "sinon": "^5.0.7"
   },
   "dependencies": {
-    "@coinify/currency": "^1.0.2",
+    "@coinify/currency": "^1.0.3",
     "async": "^2.6.0",
     "console-log-level": "^1.4.0",
     "lodash": "^4.17.10",

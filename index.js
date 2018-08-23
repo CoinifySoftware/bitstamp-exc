@@ -257,6 +257,8 @@ function constructTransactionObject(currentTx) {
     currency = 'BTC';
   } else if (currentTx.eth && parseFloat(currentTx.eth) !== 0) {
     currency = 'ETH';
+  } else if (currentTx.bch && parseFloat(currentTx.bch) !== 0) {
+    currency = 'BCH';
   }
 
   return {
