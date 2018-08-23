@@ -48,6 +48,30 @@ describe('#getTicker', () => {
     expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/ticker/btcusd/');
   });
 
+  it('should get and return ticker data (BCH)', async () => {
+    requestStub.yields(null, {}, JSON.stringify(responses.getTickerResponse));
+
+    const baseCurrency = 'BCH';
+    const quoteCurrency = 'USD';
+
+    const res = await promisify(bitstamp.getTicker.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+    expect(res).to.deep.equal({
+      baseCurrency: 'BCH',
+      quoteCurrency: 'USD',
+      bid: 596.09,
+      ask: 596.11,
+      lastPrice: 596.09,
+      high24Hours: 597.53,
+      low24Hours: 579.43,
+      vwap24Hours: 586.35,
+      volume24Hours: 359669846615
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/ticker/bchusd/');
+  });
+
   it('should get and return ticker data (ETH)', async () => {
     requestStub.yields(null, {}, JSON.stringify(responses.getTickerResponse));
 
