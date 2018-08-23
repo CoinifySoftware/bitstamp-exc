@@ -22,7 +22,9 @@ const getBalanceResponse =
   usd_balance: '51.00',
   usd_available: '49.00',
   eth_available: '0.1',
-  eth_balance: '0.2'
+  eth_balance: '0.2',
+  bch_available: '0.12',
+  bch_balance: '0.21'
 };
 
 const getOrderBookResponseUSD =

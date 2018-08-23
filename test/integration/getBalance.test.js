@@ -30,10 +30,10 @@ describe('#getBalance', () => {
     const res = await promisify(bitstamp.getBalance.bind(bitstamp))();
     expect(res).to.deep.equal({
       available: {
-        ETH: 100000000000, USD: 4900, BTC: 10000069
+        ETH: 100000000000, USD: 4900, BTC: 10000069, BCH: 12000000
       },
       total: {
-        ETH: 200000000000, USD: 5100, BTC: 12345678
+        ETH: 200000000000, USD: 5100, BTC: 12345678, BCH: 21000000
       }
     });
 

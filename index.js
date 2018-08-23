@@ -439,11 +439,13 @@ Bitstamp.prototype.getBalance = function (callback) {
     const balance = {
       available: {
         ETH: currencyHelper.toSmallestSubunit(res.eth_available, 'ETH'),
+        BCH: currencyHelper.toSmallestSubunit(res.bch_available, 'BCH'),
         USD: currencyHelper.toSmallestSubunit(res.usd_available, 'USD'),
         BTC: currencyHelper.toSmallestSubunit(res.btc_available, 'BTC')
       },
       total: {
         ETH: currencyHelper.toSmallestSubunit(res.eth_balance, 'ETH'),
+        BCH: currencyHelper.toSmallestSubunit(res.bch_balance, 'BCH'),
         USD: currencyHelper.toSmallestSubunit(res.usd_balance, 'USD'),
         BTC: currencyHelper.toSmallestSubunit(res.btc_balance, 'BTC')
       }
