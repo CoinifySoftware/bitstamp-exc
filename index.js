@@ -728,7 +728,7 @@ Bitstamp.prototype.withdraw = async function(args) {
   // Transform request function to a promise function
   const postFn = promisify(this._post).bind(this);
 
-  const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : 'v2/eth_withdrawal';
+  const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : `v2/${currency.toLowerCase()}_withdrawal`;
 
   // Call API
   const { id: externalId } = await postFn(requestUrl, requestArgs);

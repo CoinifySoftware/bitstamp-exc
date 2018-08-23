@@ -45,6 +45,20 @@ describe('withdraw', function() {
     });
   });
 
+  it('should call bitstamp and return response for BCH withdrawal', async () => {
+    const withdrawal = await bitstamp.withdraw(_.defaults({ currency: 'BCH' }, args));
+
+    expect(requestStub.calledOnce).to.equal(true);
+    const [ requestArgs ] = requestStub.firstCall.args;
+    expect(requestArgs.url).to.equal('http://localhost:3000/api/v2/bch_withdrawal/');
+    expect(requestArgs.form.address).to.equal(args.address);
+    expect(requestArgs.form.amount).to.equal(0.1);
+    expect(withdrawal).to.deep.equal({
+      externalId: 'bitstamp_id',
+      state: 'pending'
+    });
+  });
+
   it('should call bitstamp and return response for ETH withdrawal', async () => {
     const withdrawal = await bitstamp.withdraw(_.defaults({ currency: 'ETH' }, args));
 
