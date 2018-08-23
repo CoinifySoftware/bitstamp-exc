@@ -602,9 +602,17 @@ Bitstamp.prototype.listTrades = function (latestTrade) {
       return transactions.map( tx => {
         let baseCurrency = 'BTC',
           baseAmountMainUnit = tx.btc;
+
+        // For ETH trades
         if (tx.eth_usd) {
           baseCurrency = 'ETH';
           baseAmountMainUnit = tx.eth;
+        }
+
+        // For BCH trades
+        if (tx.bch_usd) {
+          baseCurrency = 'BCH';
+          baseAmountMainUnit = tx.bch;
         }
 
         return {

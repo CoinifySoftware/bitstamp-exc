@@ -51,6 +51,19 @@ describe('#listTrades', () => {
         feeAmount: 3,
         tradeTime: new Date('2018-05-16T07:11:03.000Z'),
         raw: responses.listTransactionsResponse[2]
+      },
+      {
+        externalId: '1239',
+        type: 'limit',
+        state: 'closed',
+        baseCurrency: 'BCH',
+        baseAmount: 1451258,
+        quoteCurrency: 'USD',
+        quoteAmount: -997,
+        feeCurrency: 'USD',
+        feeAmount: 3,
+        tradeTime: new Date('2018-05-16T07:11:20.000Z'),
+        raw: responses.listTransactionsResponse[9]
       }
     ]);
 

@@ -206,6 +206,18 @@ const listTransactionsResponse =
       type: '0',
       id: 72759801,
       eur: 0
+    },
+    {
+      usd: '-9.97',
+      order_id: 1239,
+      datetime: '2018-05-16 09:11:20',
+      fee: '0.03',
+      btc: 0,
+      bch: '0.01451258',
+      bch_usd: 686.99,
+      type: '2',
+      id: 4321,
+      eur: 0
     }
   ];
 
