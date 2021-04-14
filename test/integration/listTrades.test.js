@@ -27,7 +27,7 @@ describe('#listTrades', () => {
     requestStub.restore();
   });
 
-  it('it should list trades with correct currency', async () => {
+  it('should throw error if weird response', async () => {
     requestStub
       .yields(null, {}, '{}');
 
