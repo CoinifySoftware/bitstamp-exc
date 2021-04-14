@@ -188,6 +188,12 @@ function iterateRequestTxs(self, earliestDate, callback) {
           return asyncCallback(err);
         }
 
+        if (!Array.isArray(res)) {
+          return callback(new Error(`Response from Bitstamp is not an array ${JSON.stringify(res)}`));
+        }
+
+        console.dir(res, { colors: true, depth: 5 });
+
         res.every(function (tx) {
           const currentTxDateTime = new Date(tx.datetime);
           /* Check if the current transaction's timestamp is lower (further in the past) than earliest date allowed
