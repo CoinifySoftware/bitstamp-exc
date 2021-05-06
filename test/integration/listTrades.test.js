@@ -56,7 +56,7 @@ describe('#listTrades', () => {
         feeCurrency: 'USD',
         feeAmount: 3,
         tradeTime: new Date('2018-05-16T07:11:20.000Z'),
-        raw: responses.listTransactionsResponse[1]
+        raw: responses.listTransactionsResponse[2]
       }
     ]);
 
