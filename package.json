@@ -1,6 +1,6 @@
 {
   "name": "bitstamp-exc",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "An NPM package for utilizing the Bitstamp exchange API",
   "main": "index.js",
   "scripts": {
@@ -13,19 +13,22 @@
   "author": "Galin Kostov <gko@coinify.com>",
   "license": "ISC",
   "devDependencies": {
-    "@coinify/eslint-config-coinify": "^1.1.8",
-    "chai": "^4.1.2",
+    "@coinify/eslint-config-coinify": "^2.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.22.1",
+    "@typescript-eslint/parser": "^4.22.1",
+    "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^4.19.1",
-    "eslint-plugin-mocha": "^5.0.0",
-    "mocha": "^5.1.1",
-    "sinon": "^5.0.7"
+    "eslint": "^7.25.0",
+    "eslint-plugin-mocha": "^8.1.0",
+    "mocha": "^5.2.0",
+    "sinon": "^5.1.1",
+    "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@coinify/currency": "^1.0.3",
-    "async": "^2.6.0",
-    "console-log-level": "^1.4.0",
-    "lodash": "^4.17.10",
+    "@coinify/currency": "^1.3.11",
+    "async": "^2.6.3",
+    "console-log-level": "^1.4.1",
+    "lodash": "^4.17.21",
     "request": "^2.86.0"
   },
   "repository": {

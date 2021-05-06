@@ -263,6 +263,8 @@ function constructTransactionObject(currentTx) {
     currency = 'ETH';
   } else if (currentTx.bch && parseFloat(currentTx.bch) !== 0) {
     currency = 'BCH';
+  } else if (currentTx.usdc && parseFloat(currentTx.udsc) !== 0) {
+    currency = 'USDC';
   }
 
   return {

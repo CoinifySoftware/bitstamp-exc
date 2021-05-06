@@ -244,7 +244,7 @@ describe('#placeTrade', () => {
   });
 
   it('should return error when limitPrice is null', (done) => {
-    bitstamp.placeTrade(-123456, null, 'BTC', 'USD', function (err, result) {
+    bitstamp.placeTrade(-123456, null, 'BTC', 'USD', function (err) {
       expect(err.message).to.equal('The limit price must be a positive number.');
       expect(err.code).to.equal(errorCodes.MODULE_ERROR);
       expect(err.cause).to.equal(undefined);
