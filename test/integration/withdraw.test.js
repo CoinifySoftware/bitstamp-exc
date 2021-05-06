@@ -7,7 +7,7 @@ const chai = require('chai'),
 
 chai.use(require('chai-as-promised'));
 
-describe('withdraw', function() {
+describe('withdraw', function () {
   const bitstamp = new Bitstamp({
     key: 'apikey',
     secret: 'apisecret',
