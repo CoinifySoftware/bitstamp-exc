@@ -54,7 +54,7 @@ class Bitstamp {
 
       return callback(null, orderBook);
     });
-  };
+  }
 
   getTicker(baseCurrency, quoteCurrency, callback) {
     // First check if currency pair is supported
@@ -83,7 +83,7 @@ class Bitstamp {
 
       return callback(null, ticker);
     });
-  };
+  }
 
   getBalance(callback) {
     this._post('v2/balance', null, function (err, res) {
@@ -108,7 +108,7 @@ class Bitstamp {
 
       return callback(null, balance);
     });
-  };
+  }
 
   getTrade(trade, callback) {
     if (!trade || !callback) {
@@ -162,7 +162,7 @@ class Bitstamp {
 
       return callback(null, order);
     });
-  };
+  }
 
   listTransactions(latestTransaction, callback) {
     const self = this;
@@ -187,9 +187,9 @@ class Bitstamp {
       }
       return callback(null, transactions);
     });
-  };
+  }
 
-  async listTrades(latestTrade) {
+  listTrades(latestTrade) {
     let latestTxDate = new Date(0);
     if (latestTrade) {
       const { raw } = latestTrade;
@@ -236,7 +236,7 @@ class Bitstamp {
           };
         });
       });
-  };
+  }
 
   placeTrade(baseAmount, limitPrice, baseCurrency, quoteCurrency, callback) {
     // First check if currency pair is supported
@@ -285,7 +285,7 @@ class Bitstamp {
       /* All is well. Return the placed trade response */
       return callback(null, trade);
     });
-  };
+  }
 
   async withdraw(args) {
     const { amount, currency, address } = args;
@@ -310,7 +310,7 @@ class Bitstamp {
 
     // Construct and return response
     return { externalId, state: constants.STATE_PENDING };
-  };
+  }
 
   _get(action, callback) {
     const path = '/api/' + action + '/';
