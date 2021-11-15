@@ -8,7 +8,6 @@ const chaiAsPromised = require('chai-as-promised');
 
 chai.use(chaiAsPromised);
 
-
 describe('#listTrades', () => {
 
   const bitstamp = new Bitstamp({
