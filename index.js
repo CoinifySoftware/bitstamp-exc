@@ -6,6 +6,7 @@ const async = require('async');
 const { promisify } = require('util');
 const errorCodes = require('./lib/error_codes.js');
 const constants = require('./lib/constants.js');
+const debugLogger = require('console-log-level');
 
 class Bitstamp {
   constructor({ key, secret, clientId, host, timeout, log }) {
@@ -14,9 +15,7 @@ class Bitstamp {
     this.clientId = clientId;
     this.host = host || 'https://www.bitstamp.net';
     this.timeout = timeout || 5000;
-
-    /* eslint-disable */
-    this.log = log || require('console-log-level')({});
+    this.log = log || debugLogger({});
   }
 
   getOrderBook(baseCurrency, quoteCurrency, callback) {
@@ -32,25 +31,22 @@ class Bitstamp {
         return callback(err);
       }
 
-      /* Declare the orderBook object with the currency pair */
-      const orderBook = {
-        baseCurrency: baseCurrency,
-        quoteCurrency: quoteCurrency
-      };
-
-      /* Organize the Order Book values in a custom way */
       const convertRawEntry = function convertRawEntry(entry) {
         return {
           price: parseFloat(entry[0]),
           baseAmount: currencyHelper.toSmallestSubunit(parseFloat(entry[1]), baseCurrency)
         };
       };
+
       const rawBids = res.bids || [];
       const rawAsks = res.asks || [];
 
-      /* Declare and assign the organized bids and asks to the orderBook object */
-      orderBook.bids = rawBids.map(convertRawEntry);
-      orderBook.asks = rawAsks.map(convertRawEntry);
+      const orderBook = {
+        baseCurrency: baseCurrency,
+        quoteCurrency: quoteCurrency,
+        bids: rawBids.map(convertRawEntry),
+        asks: rawAsks.map(convertRawEntry)
+      };
 
       return callback(null, orderBook);
     });
@@ -165,7 +161,6 @@ class Bitstamp {
   }
 
   listTransactions(latestTransaction, callback) {
-    const self = this;
     /*
      * If latestTx is provided - create a date&time value to compare to, for a matching tx.
      *
@@ -174,7 +169,7 @@ class Bitstamp {
      * earlier. This way ALL transactions in the certain account will be returned.
      */
     const latestTxDate = latestTransaction ? new Date(latestTransaction.raw.datetime) : new Date(0);
-    iterateRequestTxs(self, latestTxDate, (err, transactions) => {
+    iterateRequestTxs(this, latestTxDate, (err, transactions) => {
       if (err) {
         return callback(err);
       }
@@ -182,14 +177,14 @@ class Bitstamp {
         transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_DEPOSIT || parseInt(tx.type) === constants.TYPE_WITHDRAWAL);
         transactions = transactions.map(constructTransactionObject);
       } catch(err) {
-        this.log.error({err, transactionsRaw: JSON.stringify(transactions)}, 'Error parsing transactions');
+        this.log.error({ err, transactionsRaw: JSON.stringify(transactions) }, 'Error parsing transactions');
         return callback(err);
       }
       return callback(null, transactions);
     });
   }
 
-  listTrades(latestTrade) {
+  async listTrades(latestTrade) {
     let latestTxDate = new Date(0);
     if (latestTrade) {
       const { raw } = latestTrade;
@@ -201,41 +196,40 @@ class Bitstamp {
     }
 
     const iterateRequestTxsPromise = promisify(iterateRequestTxs);
-    return iterateRequestTxsPromise(this, latestTxDate)
-      .then((transactions) => {
-        // console.dir(transactions, {colors: true});
-        transactions = transactions.filter(tx => parseInt(tx.type) === constants.TYPE_MARKET_TRADE);
-        return transactions.map( tx => {
-          let baseCurrency = 'BTC',
-            baseAmountMainUnit = tx.btc;
 
-          // For ETH trades
-          if (tx.eth_usd) {
-            baseCurrency = 'ETH';
-            baseAmountMainUnit = tx.eth;
-          }
+    const transactions = (await iterateRequestTxsPromise(this, latestTxDate))
+      .filter(tx => parseInt(tx.type) === constants.TYPE_MARKET_TRADE);
 
-          // For BCH trades
-          if (tx.bch_usd) {
-            baseCurrency = 'BCH';
-            baseAmountMainUnit = tx.bch;
-          }
+    return transactions.map( tx => {
+      let baseCurrency = 'BTC',
+        baseAmountMainUnit = tx.btc;
 
-          return {
-            baseCurrency,
-            baseAmount: currencyHelper.toSmallestSubunit(parseFloat(baseAmountMainUnit), baseCurrency),
-            externalId: tx.order_id.toString(),
-            type: 'limit',
-            state: 'closed',
-            quoteCurrency: 'USD',
-            quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
-            feeCurrency: 'USD',
-            feeAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
-            tradeTime: new Date(tx.datetime),
-            raw: tx
-          };
-        });
-      });
+      // For ETH trades
+      if (tx.eth_usd) {
+        baseCurrency = 'ETH';
+        baseAmountMainUnit = tx.eth;
+      }
+
+      // For BCH trades
+      if (tx.bch_usd) {
+        baseCurrency = 'BCH';
+        baseAmountMainUnit = tx.bch;
+      }
+
+      return {
+        baseCurrency,
+        baseAmount: currencyHelper.toSmallestSubunit(parseFloat(baseAmountMainUnit), baseCurrency),
+        externalId: tx.order_id.toString(),
+        type: 'limit',
+        state: 'closed',
+        quoteCurrency: 'USD',
+        quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
+        feeCurrency: 'USD',
+        feeAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
+        tradeTime: new Date(tx.datetime),
+        raw: tx
+      };
+    });
   }
 
   placeTrade(baseAmount, limitPrice, baseCurrency, quoteCurrency, callback) {
@@ -359,72 +353,72 @@ class Bitstamp {
   }
 
   _request(params, callback) {
-      params = _.defaultsDeep({
-        headers: { 'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)' }
-      }, params);
+    params = _.defaultsDeep({
+      headers: { 'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)' }
+    }, params);
 
-      const requestFunction = function (err, res, body) {
-        if (err || !body) {
-          return callback(constructError('There is an error in the response from the Bitstamp service...',
-            errorCodes.EXCHANGE_SERVER_ERROR, err));
-        }
-        if (res.error) {
-          return callback(constructError('The exchange service responded with an error...',
-            errorCodes.EXCHANGE_SERVER_ERROR, res.error));
-        }
+    const requestFunction = function (err, res, body) {
+      if (err || !body) {
+        return callback(constructError('There is an error in the response from the Bitstamp service...',
+          errorCodes.EXCHANGE_SERVER_ERROR, err));
+      }
+      if (res.error) {
+        return callback(constructError('The exchange service responded with an error...',
+          errorCodes.EXCHANGE_SERVER_ERROR, res.error));
+      }
 
-        let data;
-        try {
-          data = JSON.parse(body);
-        } catch (e) {
-          return callback(constructError('Could not understand response from exchange server.',
-            errorCodes.MODULE_ERROR, e));
-        }
+      let data;
+      try {
+        data = JSON.parse(body);
+      } catch (e) {
+        return callback(constructError('Could not understand response from exchange server.',
+          errorCodes.MODULE_ERROR, e));
+      }
 
-        if (data.status === 'error') {
-          return callback(constructError('There is an error in the body of the response from the exchange service...',
-            errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data))));
-        }
+      if (data.status === 'error') {
+        return callback(constructError('There is an error in the body of the response from the exchange service...',
+          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data))));
+      }
 
-        /* Error response was never received when making the GET request, and the API docs don't mention anything about
+      /* Error response was never received when making the GET request, and the API docs don't mention anything about
          * errors, so we can only assume that the error response from a GET request has the same structure as the one
          * from the POST request (which has been received while dev/testing and we know how it looks).
          * Therefore, the implementation is based on this assumption.
          */
-        if (data.error || data.status === 'error') {
-          let error = constructError('There is an error in the body of the response from the exchange service...',
-            errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
+      if (data.error || data.status === 'error') {
+        let error = constructError('There is an error in the body of the response from the exchange service...',
+          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
 
-          /* Check for known errors */
-          if ( data.error.__all__ ) {
-            const allErrors = data.error.__all__;
+        /* Check for known errors */
+        if ( data.error.__all__ ) {
+          const allErrors = data.error.__all__;
 
-            const REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS =
+          const REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS =
               /^You need \d+(\.\d+)? [A-Z]{3} to open that order. You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
-            const REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS =
+          const REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS =
               /^You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
 
-            /* Check for insufficient funds */
-            const insufficientFundsErrorMessage =
+          /* Check for insufficient funds */
+          const insufficientFundsErrorMessage =
               _.find(allErrors, msg => REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS.test(msg)) ||
               _.find(allErrors, msg => REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS.test(msg));
-            if ( insufficientFundsErrorMessage ) {
-              error = constructError(insufficientFundsErrorMessage, errorCodes.INSUFFICIENT_FUNDS);
-            }
+          if ( insufficientFundsErrorMessage ) {
+            error = constructError(insufficientFundsErrorMessage, errorCodes.INSUFFICIENT_FUNDS);
           }
-
-          return callback(error);
         }
-        return callback(null, data);
 
-      };
-
-      if (params.method === 'GET') {
-        return request.get(params, requestFunction);
-      } else if (params.method === 'POST') {
-        return request.post(params, requestFunction);
+        return callback(error);
       }
-      return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
+      return callback(null, data);
+
+    };
+
+    if (params.method === 'GET') {
+      return request.get(params, requestFunction);
+    } else if (params.method === 'POST') {
+      return request.post(params, requestFunction);
+    }
+    return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
   }
 }
 
