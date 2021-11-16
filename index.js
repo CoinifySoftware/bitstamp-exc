@@ -8,7 +8,6 @@ const constants = require('./lib/constants.js');
 const debugLogger = require('console-log-level');
 const { v4: uuidv4 } = require('uuid');
 const requestHelper = require('./lib/request_helper');
-const axios = require('axios');
 
 class Bitstamp {
   constructor({ key, secret, host, timeout, log }) {
