@@ -12,12 +12,11 @@ This document will guide you through a list of the endpoints that this module ut
 ### Initialization
 
 ```js
-var Bitstamp = require('bitstamp-exc');
+const Bitstamp = require('bitstamp-exc');
 
-var bitstamp = new Bitstamp({
+const bitstamp = new Bitstamp({
     key: 'your_api_key',
     secret: 'your_api_secret',
-    clientId: your_client_id
   }
 );
 ```

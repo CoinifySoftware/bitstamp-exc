@@ -8,18 +8,17 @@ const constants = require('./lib/constants.js');
 const debugLogger = require('console-log-level');
 const { v4: uuidv4 } = require('uuid');
 const requestHelper = require('./lib/request_helper');
+const axios = require('axios');
 
 class Bitstamp {
-  constructor({ key, secret, clientId, host, timeout, log }) {
+  constructor({ key, secret, host, timeout, log }) {
     this.key = key;
     this.secret = secret;
-    this.clientId = clientId;
-    this.host = host || 'https://www.bitstamp.net';
-    this.timeout = timeout || 5000;
+    this.baseURL = host || 'https://www.bitstamp.net';
     this.log = log || debugLogger({ level: process.env.LOG_LEVEL });
 
     requestHelper.init({
-      baseURL: host || 'https://www.bitstamp.net',
+      baseURL: this.baseURL,
       timeout: timeout || 5000
     });
   }
@@ -328,8 +327,8 @@ class Bitstamp {
       callback = requestBody;
     }
 
-    if (!this.key || !this.secret || !this.clientId) {
-      return callback('Must provide key, secret and client ID to make this API request.');
+    if (!this.key || !this.secret) {
+      return callback('Must provide key and secret to make this API request.');
     }
 
     const path = '/api/' + action + '/';
@@ -340,14 +339,11 @@ class Bitstamp {
     const apiVersion = 'v2';
 
     const method = 'POST';
-
-    const host = this.host;
+    const host = new URL(this.baseURL).host;
     const query = '';
 
     const contentType = requestBody ? 'application/x-www-form-urlencoded' : ''; // empty if no request body
-
     const requestBodyString = requestBody ? new URLSearchParams(requestBody).toString() : '';
-
     const stringToSign = xAuth + method + host + path + query + contentType + nonce + timeInMillis + apiVersion + requestBodyString;
 
     const signer = crypto.createHmac('sha256', this.secret);
