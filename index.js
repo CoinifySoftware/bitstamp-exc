@@ -7,6 +7,8 @@ const { promisify } = require('util');
 const errorCodes = require('./lib/error_codes.js');
 const constants = require('./lib/constants.js');
 const debugLogger = require('console-log-level');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
 class Bitstamp {
   constructor({ key, secret, clientId, host, timeout, log }) {
@@ -127,36 +129,40 @@ class Bitstamp {
         ' \'buy\'.', errorCodes.MODULE_ERROR, null));
     }
 
-    this._post('order_status', { id }, (err, res) => {
+    this._post('v2/order_status', { id }, (err, res) => {
       if (err) {
         return callback(err);
       }
 
-      const baseAmounts = res.transactions.map((tx) => {
-        const baseAmount = currencyHelper.toSmallestSubunit(tx[baseCurrency.toLowerCase()], baseCurrency);
-        return orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
-      });
-      const quoteAmounts = res.transactions.map((tx) => {
-        const quoteAmount = currencyHelper.toSmallestSubunit(tx[quoteCurrency.toLowerCase()], quoteCurrency);
-        return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
-      });
+      try {
+        const baseAmounts = res.transactions.map((tx) => {
+          const baseAmount = currencyHelper.toSmallestSubunit(tx[baseCurrency.toLowerCase()], baseCurrency);
+          return orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
+        });
+        const quoteAmounts = res.transactions.map((tx) => {
+          const quoteAmount = currencyHelper.toSmallestSubunit(tx[quoteCurrency.toLowerCase()], quoteCurrency);
+          return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
+        });
 
-      const feeCurrency = 'USD'; // Fee is always USD for bitstamp
-      const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
+        const feeCurrency = 'USD'; // Fee is always USD for bitstamp
+        const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
 
-      const order = {
-        baseCurrency, quoteCurrency, feeCurrency,
-        externalId: id.toString(),
-        type: 'limit',
-        state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
-        baseAmount: _.sum(baseAmounts),
-        quoteAmount: _.sum(quoteAmounts),
-        feeAmount: _.sum(feeAmounts),
-        // Add ID to raw result
-        raw: _.defaults(res, { id })
-      };
+        const order = {
+          baseCurrency, quoteCurrency, feeCurrency,
+          externalId: id.toString(),
+          type: 'limit',
+          state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
+          baseAmount: _.sum(baseAmounts),
+          quoteAmount: _.sum(quoteAmounts),
+          feeAmount: _.sum(feeAmounts),
+          // Add ID to raw result
+          raw: _.defaults(res, { id })
+        };
 
-      return callback(null, order);
+        return callback(null, order);
+      } catch(err) {
+        return callback(err);
+      }
     });
   }
 
@@ -318,9 +324,9 @@ class Bitstamp {
     this._request(options, callback);
   }
 
-  _post(action, params, callback) {
-    if (typeof params === 'function') {
-      callback = params;
+  _post(action, requestBody, callback) {
+    if (typeof requestBody === 'function') {
+      callback = requestBody;
     }
 
     if (!this.key || !this.secret || !this.clientId) {
@@ -328,28 +334,55 @@ class Bitstamp {
     }
 
     const path = '/api/' + action + '/';
-    const nonce = new Date().getTime()*10;
-    const message = nonce + this.clientId + this.key;
-    const signer = crypto.createHmac('sha256', new Buffer(this.secret, 'utf8'));
-    const signature = signer.update(message).digest('hex').toUpperCase();
+    const xAuth = `BITSTAMP ${this.key}`;
 
-    params = _.extend({
-      key: this.key,
-      signature: signature,
-      nonce: nonce
-    }, params);
+    const nonce = uuidv4();
+    const timeInMillis = new Date().getTime();
+    const apiVersion = 'v2';
 
-    const options = {
-      url: this.host + path,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: this.timeout,
-      form: params
+    const method = 'POST';
+
+    const host = 'www.bitstamp.net';
+    const query = '';
+
+    const contentType = requestBody ? 'application/x-www-form-urlencoded' : ''; // empty if no request body
+
+    const requestBodyString = requestBody ? new URLSearchParams(requestBody).toString() : '';
+
+    const stringToSign = xAuth + method + host + path + query + contentType + nonce + timeInMillis + apiVersion + requestBodyString;
+
+    const signer = crypto.createHmac('sha256', this.secret);
+    const signature = signer.update(stringToSign).digest('hex').toUpperCase();
+
+    const headers = {
+      'Content-Type': contentType,
+      'X-Auth-Version': apiVersion,
+      'X-Auth-Timestamp': timeInMillis,
+      'X-Auth-Nonce': nonce,
+      'X-Auth-Signature': signature,
+      'X-Auth': xAuth
     };
 
-    this._request(options, callback);
+    const fn = axios.post(this.host + path, requestBodyString, { headers })
+      .then(({ data }) => {
+        if (data.status === 'error') {
+          throw constructError(`Error in result: ${JSON.stringify(data)}`,
+            errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data)));
+        }
+
+        return data;
+      })
+      .catch(err => {
+        // Module errors - just throw
+        if (err.code) {
+          throw err;
+        }
+
+        const data = err.response && err.response.data;
+        throw constructError(`Error response: ${JSON.stringify(data)}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
+      });
+
+    return callbackHelper(fn, callback);
   }
 
   _request(params, callback) {
@@ -563,6 +596,19 @@ function constructError(message, errorCode, errorCause) {
   }
 
   return error;
+}
+
+function callbackHelper(p, callback) {
+  if (typeof callback === 'function') {
+    // use nodejs calling convention for callbacks
+    p.then(result => {
+      callback(null, result);
+    }, err => {
+      callback(err);
+    });
+  } else {
+    return p;
+  }
 }
 
 module.exports = Bitstamp;
