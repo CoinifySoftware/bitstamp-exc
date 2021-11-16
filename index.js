@@ -17,7 +17,7 @@ class Bitstamp {
     this.clientId = clientId;
     this.host = host || 'https://www.bitstamp.net';
     this.timeout = timeout || 5000;
-    this.log = log || debugLogger({});
+    this.log = log || debugLogger({ level: process.env.LOG_LEVEL });
   }
 
   getOrderBook(baseCurrency, quoteCurrency, callback) {
@@ -300,13 +300,10 @@ class Bitstamp {
     // Construct request object
     const requestArgs = { address, amount: amountRealUnit, instant: 0 };
 
-    // Transform request function to a promise function
-    const postFn = promisify(this._post).bind(this);
-
-    const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : `v2/${currency.toLowerCase()}_withdrawal`;
+    const requestUrl = `v2/${currency.toLowerCase()}_withdrawal`;
 
     // Call API
-    const { id: externalId } = await postFn(requestUrl, requestArgs);
+    const { id: externalId } = await this._post(requestUrl, requestArgs);
 
     // Construct and return response
     return { externalId, state: constants.STATE_PENDING };

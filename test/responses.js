@@ -243,20 +243,6 @@ const placeTradeResponse =
   datetime: '2016-02-16 14:56:00.272057'
 };
 
-const placeBuyTradeInsufficientFundsResponse =
-  {
-    error: {
-      __all__: [ 'You need 359.23 USD to open that order. You have only 125.16 USD available. Check your account balance for details.' ]
-    }
-  };
-
-const placeSellTradeInsufficientFundsResponse =
-  {
-    error: {
-      __all__: [ 'You have only 0.14141414 BTC available. Check your account balance for details.' ]
-    }
-  };
-
 module.exports = {
   getTickerResponse: getTickerResponse,
   getBalanceResponse: getBalanceResponse,
@@ -264,7 +250,5 @@ module.exports = {
   getTradeSellResponse: getTradeSellResponse,
   getTradeBuyResponseBTC, getTradeBuyResponseETH,
   listTransactionsResponse: listTransactionsResponse,
-  placeTradeResponse: placeTradeResponse,
-  placeBuyTradeInsufficientFundsResponse: placeBuyTradeInsufficientFundsResponse,
-  placeSellTradeInsufficientFundsResponse: placeSellTradeInsufficientFundsResponse
+  placeTradeResponse: placeTradeResponse
 };

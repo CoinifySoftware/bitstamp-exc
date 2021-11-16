@@ -1,37 +1,21 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const responses = require('./../responses.js');
-const request = require('request');
-const Bitstamp = require('../../index.js');
-const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
-
-chai.use(chaiAsPromised);
+const axios = require('axios');
+const { initModule } =require('../helpers');
 
 describe('#listTrades', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.listTransactionsResponse));
+    requestStub = sinon.stub(axios, 'post')
+      .resolves({ data: responses.listTransactionsResponse });
   });
 
   afterEach(() => {
     requestStub.restore();
-  });
-
-  it('should throw error if weird response', async () => {
-    requestStub
-      .yields(null, {}, '{}');
-
-
-    await expect(bitstamp.listTrades()).to.eventually.be.rejectedWith('Response from Bitstamp is not an array {}');
   });
 
   it('should use latestTrade when provided', async () => {
@@ -60,6 +44,6 @@ describe('#listTrades', () => {
     ]);
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
   });
 });

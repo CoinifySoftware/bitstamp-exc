@@ -1,23 +1,18 @@
-const expect = require('chai').expect,
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const { initModule } = require('../helpers');
+const axios = require('axios');
 
 describe('#listTransactions', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.listTransactionsResponse));
+    requestStub = sinon.stub(axios, 'post')
+      .resolves({ data: responses.listTransactionsResponse });
   });
 
   afterEach(() => {
@@ -33,7 +28,7 @@ describe('#listTransactions', () => {
     } ];
 
     requestStub
-      .yields(null, {}, JSON.stringify(response));
+      .resolves({ data: response });
 
     return bitstamp.listTransactions(null, (err, response) => {
       expect(err).to.not.equal(null);
@@ -112,7 +107,8 @@ describe('#listTransactions', () => {
     ]);
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[1]).to.equal('limit=100&offset=0&sort=desc');
   });
 
   it('should use latestTransaction', async () => {
@@ -145,9 +141,5 @@ describe('#listTransactions', () => {
         raw: responses.listTransactionsResponse[1]
       }
     ]);
-
-    expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
   });
-
 });

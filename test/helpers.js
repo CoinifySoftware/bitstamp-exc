@@ -5,7 +5,7 @@ function initModule() {
     key: 'apikey',
     secret: 'apisecret',
     clientId: 'clientId',
-    host: 'http://localhost:3000'
+    host: 'https://www.bitstamp.net'
   });
 }
 

@@ -1,18 +1,13 @@
-const expect = require('chai').expect,
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const request = require('request');
+const { initModule } = require('../helpers');
 
 describe('#getTicker', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
@@ -45,7 +40,7 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/ticker/btcusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/btcusd/');
   });
 
   it('should get and return ticker data (BCH)', async () => {
@@ -69,7 +64,7 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/ticker/bchusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/bchusd/');
   });
 
   it('should get and return ticker data (ETH)', async () => {
@@ -93,7 +88,7 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/ticker/ethusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/ethusd/');
   });
 
 });

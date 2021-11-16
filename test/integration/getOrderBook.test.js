@@ -1,18 +1,13 @@
-const expect = require('chai').expect,
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const request = require('request');
+const { initModule } = require('../helpers');
 
 describe('#getOrderBook', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
@@ -45,7 +40,7 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/order_book/btcusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/btcusd/');
   });
 
   it('should get and return order book for BCHUSD', async () => {
@@ -70,7 +65,7 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/order_book/bchusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/bchusd/');
   });
 
   it('should get and return order book for ETHUSD', async () => {
@@ -95,7 +90,7 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/order_book/ethusd/');
+    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/ethusd/');
   });
 
   it('should throw err if currency pair is not supported', (done) => {
