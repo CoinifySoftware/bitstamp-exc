@@ -378,8 +378,8 @@ class Bitstamp {
           throw err;
         }
 
-        const data = err.response && err.response.data;
-        throw constructError(`Error response: ${JSON.stringify(data)}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
+        const errorString = err.response && JSON.stringify(err.response.data) || err.message;
+        throw constructError(`Error response: ${errorString}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
       });
 
     return callbackHelper(fn, callback);
