@@ -2,7 +2,7 @@ const expect = require('chai').expect;
 const { promisify } = require('util');
 const sinon = require('sinon');
 const responses = require('./../responses.js');
-const request = require('request');
+const requestHelper = require('../../lib/request_helper');
 const { initModule } = require('../helpers');
 
 describe('#getTicker', () => {
@@ -11,8 +11,8 @@ describe('#getTicker', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'get');
-
+    requestStub = sinon.stub(requestHelper, 'get');
+    requestStub.resolves({ data: responses.getTickerResponse });
   });
 
   afterEach(() => {
@@ -20,8 +20,6 @@ describe('#getTicker', () => {
   });
 
   it('should get and return ticker data (BTC)', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTickerResponse));
-
     const baseCurrency = 'BTC';
     const quoteCurrency = 'USD';
 
@@ -40,12 +38,10 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/btcusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/ticker/btcusd/');
   });
 
   it('should get and return ticker data (BCH)', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTickerResponse));
-
     const baseCurrency = 'BCH';
     const quoteCurrency = 'USD';
 
@@ -64,12 +60,10 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/bchusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/ticker/bchusd/');
   });
 
   it('should get and return ticker data (ETH)', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTickerResponse));
-
     const baseCurrency = 'ETH';
     const quoteCurrency = 'USD';
 
@@ -88,7 +82,7 @@ describe('#getTicker', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/ticker/ethusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/ticker/ethusd/');
   });
 
 });

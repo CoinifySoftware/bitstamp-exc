@@ -2,7 +2,7 @@ const chai = require('chai');
 const _ = require('lodash');
 const expect = chai.expect;
 const sinon = require('sinon');
-const axios = require('axios');
+const requestHelper = require('../../lib/request_helper');
 const { initModule } = require('../helpers');
 
 chai.use(require('chai-as-promised'));
@@ -19,7 +19,7 @@ describe('withdraw', function () {
       address: 'btc_address'
     };
 
-    requestStub = sinon.stub(axios, 'post')
+    requestStub = sinon.stub(requestHelper, 'post')
       .resolves({ data: { id: 'bitstamp_id' } });
   });
 
@@ -36,7 +36,7 @@ describe('withdraw', function () {
 
     expect(requestStub.calledOnce).to.equal(true);
     const [ path, requestBody ] = requestStub.firstCall.args;
-    expect(path).to.equal('https://www.bitstamp.net/api/v2/btc_withdrawal/');
+    expect(path).to.equal('/api/v2/btc_withdrawal/');
     expect(requestBody).to.equal('address=btc_address&amount=0.1&instant=0');
   });
 
@@ -49,7 +49,7 @@ describe('withdraw', function () {
 
     expect(requestStub.calledOnce).to.equal(true);
     const [ path, requestBody ] = requestStub.firstCall.args;
-    expect(path).to.equal('https://www.bitstamp.net/api/v2/bch_withdrawal/');
+    expect(path).to.equal('/api/v2/bch_withdrawal/');
     expect(requestBody).to.equal('address=btc_address&amount=0.1&instant=0');
   });
 
@@ -62,7 +62,7 @@ describe('withdraw', function () {
 
     expect(requestStub.calledOnce).to.equal(true);
     const [ path, requestBody ] = requestStub.firstCall.args;
-    expect(path).to.equal('https://www.bitstamp.net/api/v2/eth_withdrawal/');
+    expect(path).to.equal('/api/v2/eth_withdrawal/');
     expect(requestBody).to.equal('address=btc_address&amount=0.00001&instant=0');
   });
 

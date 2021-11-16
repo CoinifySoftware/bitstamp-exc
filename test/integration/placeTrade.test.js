@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const responses = require('./../responses.js');
 const constants = require('../../lib/constants');
 const errorCodes = require('../../lib/error_codes');
-const axios = require('axios');
+const requestHelper = require('../../lib/request_helper');
 const { initModule } = require('../helpers');
 
 describe('#placeTrade', () => {
@@ -14,7 +14,7 @@ describe('#placeTrade', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(axios, 'post');
+    requestStub = sinon.stub(requestHelper, 'post');
     requestStub.resolves({ data: responses.placeTradeResponse });
   });
 
@@ -41,7 +41,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/sell/btcusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/sell/btcusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.0125&price=460.12');
   });
 
@@ -64,7 +64,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/sell/btcusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/sell/btcusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.0125&price=460');
   });
 
@@ -87,7 +87,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/buy/btcusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/buy/btcusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.0125&price=455');
   });
 
@@ -110,7 +110,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/sell/bchusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/sell/bchusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.0125&price=700.92');
   });
 
@@ -133,7 +133,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/buy/bchusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/buy/bchusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.0125&price=1230');
   });
 
@@ -156,7 +156,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/sell/ethusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/sell/ethusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.00000125&price=700.92');
   });
 
@@ -179,7 +179,7 @@ describe('#placeTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/buy/ethusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/buy/ethusd/');
     expect(requestStub.firstCall.args[1]).to.equal('amount=0.00000125&price=1230');
   });
 

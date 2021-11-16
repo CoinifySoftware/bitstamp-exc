@@ -1,4 +1,3 @@
-const request = require('request');
 const _ = require('lodash');
 const crypto = require('crypto');
 const currencyHelper = require('@coinify/currency');
@@ -8,7 +7,7 @@ const errorCodes = require('./lib/error_codes.js');
 const constants = require('./lib/constants.js');
 const debugLogger = require('console-log-level');
 const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
+const requestHelper = require('./lib/request_helper');
 
 class Bitstamp {
   constructor({ key, secret, clientId, host, timeout, log }) {
@@ -18,6 +17,11 @@ class Bitstamp {
     this.host = host || 'https://www.bitstamp.net';
     this.timeout = timeout || 5000;
     this.log = log || debugLogger({ level: process.env.LOG_LEVEL });
+
+    requestHelper.init({
+      baseURL: host || 'https://www.bitstamp.net',
+      timeout: timeout || 5000
+    });
   }
 
   getOrderBook(baseCurrency, quoteCurrency, callback) {
@@ -312,13 +316,11 @@ class Bitstamp {
   _get(action, callback) {
     const path = '/api/' + action + '/';
 
-    const options = {
-      url: this.host + path,
-      method: 'GET',
-      timeout: this.timeout
-    };
+    const fn = requestHelper.get(path)
+      .then(this._handleResponse)
+      .catch(this._handleError);
 
-    this._request(options, callback);
+    return callbackHelper(fn, callback);
   }
 
   _post(action, requestBody, callback) {
@@ -339,7 +341,7 @@ class Bitstamp {
 
     const method = 'POST';
 
-    const host = 'www.bitstamp.net';
+    const host = this.host;
     const query = '';
 
     const contentType = requestBody ? 'application/x-www-form-urlencoded' : ''; // empty if no request body
@@ -360,96 +362,32 @@ class Bitstamp {
       'X-Auth': xAuth
     };
 
-    const fn = axios.post(this.host + path, requestBodyString, { headers })
-      .then(({ data }) => {
-        if (data.status === 'error') {
-          throw constructError(`Error in result: ${JSON.stringify(data)}`,
-            errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data)));
-        }
-
-        return data;
-      })
-      .catch(err => {
-        // Module errors - just throw
-        if (err.code) {
-          throw err;
-        }
-
-        const errorString = err.response && JSON.stringify(err.response.data) || err.message;
-        throw constructError(`Error response: ${errorString}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
-      });
+    const fn = requestHelper.post(path, requestBodyString, { headers })
+      .then(this._handleResponse)
+      .catch(this._handleError);
 
     return callbackHelper(fn, callback);
   }
 
-  _request(params, callback) {
-    params = _.defaultsDeep({
-      headers: { 'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)' }
-    }, params);
-
-    const requestFunction = function (err, res, body) {
-      if (err || !body) {
-        return callback(constructError('There is an error in the response from the Bitstamp service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, err));
-      }
-      if (res.error) {
-        return callback(constructError('The exchange service responded with an error...',
-          errorCodes.EXCHANGE_SERVER_ERROR, res.error));
-      }
-
-      let data;
-      try {
-        data = JSON.parse(body);
-      } catch (e) {
-        return callback(constructError('Could not understand response from exchange server.',
-          errorCodes.MODULE_ERROR, e));
-      }
-
-      if (data.status === 'error') {
-        return callback(constructError('There is an error in the body of the response from the exchange service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data))));
-      }
-
-      /* Error response was never received when making the GET request, and the API docs don't mention anything about
-         * errors, so we can only assume that the error response from a GET request has the same structure as the one
-         * from the POST request (which has been received while dev/testing and we know how it looks).
-         * Therefore, the implementation is based on this assumption.
-         */
-      if (data.error || data.status === 'error') {
-        let error = constructError('There is an error in the body of the response from the exchange service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
-
-        /* Check for known errors */
-        if ( data.error.__all__ ) {
-          const allErrors = data.error.__all__;
-
-          const REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS =
-              /^You need \d+(\.\d+)? [A-Z]{3} to open that order. You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
-          const REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS =
-              /^You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
-
-          /* Check for insufficient funds */
-          const insufficientFundsErrorMessage =
-              _.find(allErrors, msg => REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS.test(msg)) ||
-              _.find(allErrors, msg => REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS.test(msg));
-          if ( insufficientFundsErrorMessage ) {
-            error = constructError(insufficientFundsErrorMessage, errorCodes.INSUFFICIENT_FUNDS);
-          }
-        }
-
-        return callback(error);
-      }
-      return callback(null, data);
-
-    };
-
-    if (params.method === 'GET') {
-      return request.get(params, requestFunction);
-    } else if (params.method === 'POST') {
-      return request.post(params, requestFunction);
+  _handleResponse({ data }) {
+    if (data.status === 'error') {
+      throw constructError(`Error in result: ${JSON.stringify(data)}`,
+        errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data)));
     }
-    return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
+
+    return data;
   }
+
+  _handleError(err) {
+    // Module errors - just throw
+    if (err.code) {
+      throw err;
+    }
+
+    const errorString = err.response && JSON.stringify(err.response.data) || err.message;
+    throw constructError(`Error response: ${errorString}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
+  }
+
 }
 
 /**

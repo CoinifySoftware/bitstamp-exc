@@ -1,10 +1,10 @@
 const expect = require('chai').expect;
 const { promisify } = require('util');
-const axios = require('axios');
 const sinon = require('sinon');
 const responses = require('./../responses.js');
 const errorCodes = require('../../lib/error_codes');
 const { initModule } = require('../helpers');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#getBalance', () => {
 
@@ -12,7 +12,7 @@ describe('#getBalance', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(axios, 'post');
+    requestStub = sinon.stub(requestHelper, 'post');
     requestStub.resolves({ data: responses.getBalanceResponse });
   });
 

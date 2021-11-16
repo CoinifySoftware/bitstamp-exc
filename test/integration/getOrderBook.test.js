@@ -2,7 +2,7 @@ const expect = require('chai').expect;
 const { promisify } = require('util');
 const sinon = require('sinon');
 const responses = require('./../responses.js');
-const request = require('request');
+const requestHelper = require('../../lib/request_helper');
 const { initModule } = require('../helpers');
 
 describe('#getOrderBook', () => {
@@ -11,7 +11,8 @@ describe('#getOrderBook', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'get');
+    requestStub = sinon.stub(requestHelper, 'get');
+    requestStub.resolves({ data: responses.getOrderBookResponseBTC });
   });
 
   afterEach(() => {
@@ -19,8 +20,6 @@ describe('#getOrderBook', () => {
   });
 
   it('should get and return order book for BTCUSD', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseBTC));
-
     const baseCurrency = 'BTC';
     const quoteCurrency = 'USD';
 
@@ -40,12 +39,10 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/btcusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/btcusd/');
   });
 
   it('should get and return order book for BCHUSD', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseBTC));
-
     const baseCurrency = 'BCH';
     const quoteCurrency = 'USD';
 
@@ -65,11 +62,11 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/bchusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/bchusd/');
   });
 
   it('should get and return order book for ETHUSD', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getOrderBookResponseETH));
+    requestStub.resolves({ data: responses.getOrderBookResponseETH });
 
     const baseCurrency = 'ETH';
     const quoteCurrency = 'USD';
@@ -90,7 +87,7 @@ describe('#getOrderBook', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/order_book/ethusd/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/ethusd/');
   });
 
   it('should throw err if currency pair is not supported', (done) => {

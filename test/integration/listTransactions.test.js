@@ -3,7 +3,7 @@ const { promisify } = require('util');
 const sinon = require('sinon');
 const responses = require('./../responses.js');
 const { initModule } = require('../helpers');
-const axios = require('axios');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#listTransactions', () => {
 
@@ -11,7 +11,7 @@ describe('#listTransactions', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(axios, 'post')
+    requestStub = sinon.stub(requestHelper, 'post')
       .resolves({ data: responses.listTransactionsResponse });
   });
 
@@ -107,7 +107,7 @@ describe('#listTransactions', () => {
     ]);
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
     expect(requestStub.firstCall.args[1]).to.equal('limit=100&offset=0&sort=desc');
   });
 

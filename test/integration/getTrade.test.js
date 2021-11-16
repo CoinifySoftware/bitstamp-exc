@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const responses = require('./../responses.js');
 const errorCodes = require('../../lib/error_codes');
 const { initModule } = require('../helpers');
-const axios = require('axios');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#getTrade', () => {
 
@@ -13,7 +13,7 @@ describe('#getTrade', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(axios, 'post');
+    requestStub = sinon.stub(requestHelper, 'post');
   });
 
   afterEach(() => {
@@ -49,7 +49,7 @@ describe('#getTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/order_status/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_status/');
     expect(requestStub.firstCall.args[1]).to.equal('id=108670705');
     expect(requestStub.firstCall.args[2].headers).to.include({
       'Content-Type': 'application/x-www-form-urlencoded',

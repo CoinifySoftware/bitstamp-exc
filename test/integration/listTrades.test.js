@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const responses = require('./../responses.js');
-const axios = require('axios');
+const requestHelper = require('../../lib/request_helper');
 const { initModule } =require('../helpers');
 
 describe('#listTrades', () => {
@@ -10,7 +10,7 @@ describe('#listTrades', () => {
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(axios, 'post')
+    requestStub = sinon.stub(requestHelper, 'post')
       .resolves({ data: responses.listTransactionsResponse });
   });
 
@@ -44,6 +44,6 @@ describe('#listTrades', () => {
     ]);
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0]).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
   });
 });
