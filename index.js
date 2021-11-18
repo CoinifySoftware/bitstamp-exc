@@ -224,6 +224,11 @@ class Bitstamp {
         baseAmountMainUnit = tx.bch;
       }
 
+      if (tx.usdc_usd) {
+        baseCurrency = 'USDC';
+        baseAmountMainUnit = tx.usdc;
+      }
+
       return {
         baseCurrency,
         baseAmount: currencyHelper.toSmallestSubunit(parseFloat(baseAmountMainUnit), baseCurrency),

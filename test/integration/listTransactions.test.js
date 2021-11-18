@@ -48,7 +48,7 @@ describe('#listTransactions', () => {
         timestamp: '2021-05-05T09:49:34.060Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[0]
+        raw: responses.listTransactionsResponse[1]
       },
       {
         currency: 'ETH',
@@ -57,7 +57,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-05-17T14:50:43.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[1]
+        raw: responses.listTransactionsResponse[2]
       },
       {
         currency: 'BTC',
@@ -66,7 +66,7 @@ describe('#listTransactions', () => {
         timestamp: '2016-02-15T12:25:49.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[4]
+        raw: responses.listTransactionsResponse[5]
       },
       {
         currency: 'BTC',
@@ -75,7 +75,7 @@ describe('#listTransactions', () => {
         timestamp: '2015-09-03T11:40:46.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[5]
+        raw: responses.listTransactionsResponse[6]
       },
       {
         currency: 'USD',
@@ -84,7 +84,7 @@ describe('#listTransactions', () => {
         timestamp: '2015-09-03T11:30:40.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[6]
+        raw: responses.listTransactionsResponse[7]
       },
       {
         currency: 'EUR',
@@ -93,7 +93,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-07-10T09:23:01.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[8]
+        raw: responses.listTransactionsResponse[9]
       },
       {
         currency: 'BCH',
@@ -102,7 +102,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-08-22T11:46:13.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[9]
+        raw: responses.listTransactionsResponse[10]
       }
     ]);
 
@@ -129,7 +129,7 @@ describe('#listTransactions', () => {
         timestamp: '2021-05-05T09:49:34.060Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[0]
+        raw: responses.listTransactionsResponse[1]
       },
       {
         currency: 'ETH',
@@ -138,7 +138,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-05-17T14:50:43.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[1]
+        raw: responses.listTransactionsResponse[2]
       }
     ]);
   });
