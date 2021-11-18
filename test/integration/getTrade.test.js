@@ -1,24 +1,19 @@
-const expect = require('chai').expect,
-  _ = require('lodash'),
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  errorCodes = require('../../lib/error_codes'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const _ = require('lodash');
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const errorCodes = require('../../lib/error_codes');
+const { initModule } = require('../helpers');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#getTrade', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post');
+    requestStub = sinon.stub(requestHelper, 'post');
   });
 
   afterEach(() => {
@@ -26,7 +21,7 @@ describe('#getTrade', () => {
   });
 
   it('should get sell trade', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTradeSellResponse));
+    requestStub.resolves({ data: responses.getTradeSellResponse });
     const trade = {
       baseCurrency: 'BTC',
       quoteCurrency: 'USD',
@@ -54,12 +49,17 @@ describe('#getTrade', () => {
     });
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/order_status/');
-    expect(requestStub.firstCall.args[0].form.id).to.equal(trade.raw.id);
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_status/');
+    expect(requestStub.firstCall.args[1]).to.equal('id=108670705');
+    expect(requestStub.firstCall.args[2].headers).to.include({
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Auth-Version': 'v2',
+      'X-Auth': 'BITSTAMP apikey'
+    });
   });
 
   it('should get buy order (BTC)', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTradeBuyResponseBTC));
+    requestStub.resolves({ data: responses.getTradeBuyResponseBTC });
 
     const trade = {
       baseCurrency: 'BTC',
@@ -85,13 +85,10 @@ describe('#getTrade', () => {
       feeCurrency: 'USD',
       raw: _.defaults(responses.getTradeBuyResponseBTC, { id: trade.raw.id })
     });
-
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/order_status/');
-    expect(requestStub.firstCall.args[0].form.id).to.equal(trade.raw.id);
   });
 
   it('should get buy order (ETH)', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getTradeBuyResponseETH));
+    requestStub.resolves({ data: responses.getTradeBuyResponseETH });
 
     const trade = {
       baseCurrency: 'ETH',
@@ -117,9 +114,6 @@ describe('#getTrade', () => {
       feeAmount: 3,
       raw: _.defaults(responses.getTradeBuyResponseETH, { id: trade.raw.id })
     });
-
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/order_status/');
-    expect(requestStub.firstCall.args[0].form.id).to.equal(trade.raw.id);
   });
 
   it('should return error when baseCurrency is missing', (done) => {

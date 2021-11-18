@@ -1,4 +1,3 @@
-const request = require('request');
 const _ = require('lodash');
 const crypto = require('crypto');
 const currencyHelper = require('@coinify/currency');
@@ -7,15 +6,20 @@ const { promisify } = require('util');
 const errorCodes = require('./lib/error_codes.js');
 const constants = require('./lib/constants.js');
 const debugLogger = require('console-log-level');
+const { v4: uuidv4 } = require('uuid');
+const requestHelper = require('./lib/request_helper');
 
 class Bitstamp {
-  constructor({ key, secret, clientId, host, timeout, log }) {
+  constructor({ key, secret, host, timeout, log }) {
     this.key = key;
     this.secret = secret;
-    this.clientId = clientId;
-    this.host = host || 'https://www.bitstamp.net';
-    this.timeout = timeout || 5000;
-    this.log = log || debugLogger({});
+    this.baseURL = host || 'https://www.bitstamp.net';
+    this.log = log || debugLogger({ level: process.env.LOG_LEVEL });
+
+    requestHelper.init({
+      baseURL: this.baseURL,
+      timeout: timeout || 5000
+    });
   }
 
   getOrderBook(baseCurrency, quoteCurrency, callback) {
@@ -127,36 +131,40 @@ class Bitstamp {
         ' \'buy\'.', errorCodes.MODULE_ERROR, null));
     }
 
-    this._post('order_status', { id }, (err, res) => {
+    this._post('v2/order_status', { id }, (err, res) => {
       if (err) {
         return callback(err);
       }
 
-      const baseAmounts = res.transactions.map((tx) => {
-        const baseAmount = currencyHelper.toSmallestSubunit(tx[baseCurrency.toLowerCase()], baseCurrency);
-        return orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
-      });
-      const quoteAmounts = res.transactions.map((tx) => {
-        const quoteAmount = currencyHelper.toSmallestSubunit(tx[quoteCurrency.toLowerCase()], quoteCurrency);
-        return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
-      });
+      try {
+        const baseAmounts = res.transactions.map((tx) => {
+          const baseAmount = currencyHelper.toSmallestSubunit(tx[baseCurrency.toLowerCase()], baseCurrency);
+          return orderType === constants.TYPE_SELL_ORDER ? -baseAmount : baseAmount;
+        });
+        const quoteAmounts = res.transactions.map((tx) => {
+          const quoteAmount = currencyHelper.toSmallestSubunit(tx[quoteCurrency.toLowerCase()], quoteCurrency);
+          return orderType === constants.TYPE_BUY_ORDER ? -quoteAmount : quoteAmount;
+        });
 
-      const feeCurrency = 'USD'; // Fee is always USD for bitstamp
-      const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
+        const feeCurrency = 'USD'; // Fee is always USD for bitstamp
+        const feeAmounts = res.transactions.map(tx => currencyHelper.toSmallestSubunit(tx.fee, feeCurrency));
 
-      const order = {
-        baseCurrency, quoteCurrency, feeCurrency,
-        externalId: id.toString(),
-        type: 'limit',
-        state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
-        baseAmount: _.sum(baseAmounts),
-        quoteAmount: _.sum(quoteAmounts),
-        feeAmount: _.sum(feeAmounts),
-        // Add ID to raw result
-        raw: _.defaults(res, { id })
-      };
+        const order = {
+          baseCurrency, quoteCurrency, feeCurrency,
+          externalId: id.toString(),
+          type: 'limit',
+          state: res.status.toLowerCase() === 'finished' ? 'closed' : 'open',
+          baseAmount: _.sum(baseAmounts),
+          quoteAmount: _.sum(quoteAmounts),
+          feeAmount: _.sum(feeAmounts),
+          // Add ID to raw result
+          raw: _.defaults(res, { id })
+        };
 
-      return callback(null, order);
+        return callback(null, order);
+      } catch(err) {
+        return callback(err);
+      }
     });
   }
 
@@ -216,6 +224,11 @@ class Bitstamp {
         baseAmountMainUnit = tx.bch;
       }
 
+      if (tx.usdc_usd) {
+        baseCurrency = 'USDC';
+        baseAmountMainUnit = tx.usdc;
+      }
+
       return {
         baseCurrency,
         baseAmount: currencyHelper.toSmallestSubunit(parseFloat(baseAmountMainUnit), baseCurrency),
@@ -226,7 +239,7 @@ class Bitstamp {
         quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
         feeCurrency: 'USD',
         feeAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
-        tradeTime: new Date(tx.datetime),
+        tradeTime: new Date(tx.datetime + ' UTC'),
         raw: tx
       };
     });
@@ -294,13 +307,10 @@ class Bitstamp {
     // Construct request object
     const requestArgs = { address, amount: amountRealUnit, instant: 0 };
 
-    // Transform request function to a promise function
-    const postFn = promisify(this._post).bind(this);
-
-    const requestUrl = currency === 'BTC' ? 'bitcoin_withdrawal' : `v2/${currency.toLowerCase()}_withdrawal`;
+    const requestUrl = `v2/${currency.toLowerCase()}_withdrawal`;
 
     // Call API
-    const { id: externalId } = await postFn(requestUrl, requestArgs);
+    const { id: externalId } = await this._post(requestUrl, requestArgs);
 
     // Construct and return response
     return { externalId, state: constants.STATE_PENDING };
@@ -309,117 +319,75 @@ class Bitstamp {
   _get(action, callback) {
     const path = '/api/' + action + '/';
 
-    const options = {
-      url: this.host + path,
-      method: 'GET',
-      timeout: this.timeout
-    };
+    const fn = requestHelper.get(path)
+      .then(this._handleResponse)
+      .catch(this._handleError);
 
-    this._request(options, callback);
+    return callbackHelper(fn, callback);
   }
 
-  _post(action, params, callback) {
-    if (typeof params === 'function') {
-      callback = params;
+  _post(action, requestBody, callback) {
+    if (typeof requestBody === 'function') {
+      callback = requestBody;
     }
 
-    if (!this.key || !this.secret || !this.clientId) {
-      return callback('Must provide key, secret and client ID to make this API request.');
+    if (!this.key || !this.secret) {
+      return callback('Must provide key and secret to make this API request.');
     }
 
     const path = '/api/' + action + '/';
-    const nonce = new Date().getTime()*10;
-    const message = nonce + this.clientId + this.key;
-    const signer = crypto.createHmac('sha256', new Buffer(this.secret, 'utf8'));
-    const signature = signer.update(message).digest('hex').toUpperCase();
+    const xAuth = `BITSTAMP ${this.key}`;
 
-    params = _.extend({
-      key: this.key,
-      signature: signature,
-      nonce: nonce
-    }, params);
+    const nonce = uuidv4();
+    const timeInMillis = new Date().getTime();
+    const apiVersion = 'v2';
 
-    const options = {
-      url: this.host + path,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: this.timeout,
-      form: params
+    const method = 'POST';
+    const host = new URL(this.baseURL).host;
+    const query = '';
+
+    const contentType = requestBody ? 'application/x-www-form-urlencoded' : ''; // empty if no request body
+    const requestBodyString = requestBody ? new URLSearchParams(requestBody).toString() : '';
+    const stringToSign = xAuth + method + host + path + query + contentType + nonce + timeInMillis + apiVersion + requestBodyString;
+
+    const signer = crypto.createHmac('sha256', this.secret);
+    const signature = signer.update(stringToSign).digest('hex').toUpperCase();
+
+    const headers = {
+      'Content-Type': contentType,
+      'X-Auth-Version': apiVersion,
+      'X-Auth-Timestamp': timeInMillis,
+      'X-Auth-Nonce': nonce,
+      'X-Auth-Signature': signature,
+      'X-Auth': xAuth
     };
 
-    this._request(options, callback);
+    const fn = requestHelper.post(path, requestBodyString, { headers })
+      .then(this._handleResponse)
+      .catch(this._handleError);
+
+    return callbackHelper(fn, callback);
   }
 
-  _request(params, callback) {
-    params = _.defaultsDeep({
-      headers: { 'User-Agent': 'Bitstamp Node.js API Client|(github.com/CoinifySoftware/bitstamp-exc.git)' }
-    }, params);
-
-    const requestFunction = function (err, res, body) {
-      if (err || !body) {
-        return callback(constructError('There is an error in the response from the Bitstamp service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, err));
-      }
-      if (res.error) {
-        return callback(constructError('The exchange service responded with an error...',
-          errorCodes.EXCHANGE_SERVER_ERROR, res.error));
-      }
-
-      let data;
-      try {
-        data = JSON.parse(body);
-      } catch (e) {
-        return callback(constructError('Could not understand response from exchange server.',
-          errorCodes.MODULE_ERROR, e));
-      }
-
-      if (data.status === 'error') {
-        return callback(constructError('There is an error in the body of the response from the exchange service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data))));
-      }
-
-      /* Error response was never received when making the GET request, and the API docs don't mention anything about
-         * errors, so we can only assume that the error response from a GET request has the same structure as the one
-         * from the POST request (which has been received while dev/testing and we know how it looks).
-         * Therefore, the implementation is based on this assumption.
-         */
-      if (data.error || data.status === 'error') {
-        let error = constructError('There is an error in the body of the response from the exchange service...',
-          errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data.error)));
-
-        /* Check for known errors */
-        if ( data.error.__all__ ) {
-          const allErrors = data.error.__all__;
-
-          const REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS =
-              /^You need \d+(\.\d+)? [A-Z]{3} to open that order. You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
-          const REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS =
-              /^You have only \d+(\.\d+)? [A-Z]{3} available. Check your account balance for details.$/;
-
-          /* Check for insufficient funds */
-          const insufficientFundsErrorMessage =
-              _.find(allErrors, msg => REGEX_PATTERN_BUY_ERROR_INSUFFICIENT_FUNDS.test(msg)) ||
-              _.find(allErrors, msg => REGEX_PATTERN_SELL_ERROR_INSUFFICIENT_FUNDS.test(msg));
-          if ( insufficientFundsErrorMessage ) {
-            error = constructError(insufficientFundsErrorMessage, errorCodes.INSUFFICIENT_FUNDS);
-          }
-        }
-
-        return callback(error);
-      }
-      return callback(null, data);
-
-    };
-
-    if (params.method === 'GET') {
-      return request.get(params, requestFunction);
-    } else if (params.method === 'POST') {
-      return request.post(params, requestFunction);
+  _handleResponse({ data }) {
+    if (data.status === 'error') {
+      throw constructError(`Error in result: ${JSON.stringify(data)}`,
+        errorCodes.EXCHANGE_SERVER_ERROR, new Error(JSON.stringify(data)));
     }
-    return callback(constructError('The request must be either POST or GET.', errorCodes.MODULE_ERROR, null));
+
+    return data;
   }
+
+  _handleError(err) {
+    // Module errors - just throw
+    if (err.code) {
+      throw err;
+    }
+
+    const errorString = err.response && JSON.stringify(err.response.data) || err.message;
+    throw constructError(`Error response: ${errorString}`, errorCodes.EXCHANGE_SERVER_ERROR, err);
+  }
+
 }
 
 /**
@@ -563,6 +531,19 @@ function constructError(message, errorCode, errorCause) {
   }
 
   return error;
+}
+
+function callbackHelper(p, callback) {
+  if (typeof callback === 'function') {
+    // use nodejs calling convention for callbacks
+    p.then(result => {
+      callback(null, result);
+    }, err => {
+      callback(err);
+    });
+  } else {
+    return p;
+  }
 }
 
 module.exports = Bitstamp;

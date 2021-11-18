@@ -1,23 +1,18 @@
-const expect = require('chai').expect,
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const { initModule } = require('../helpers');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#listTransactions', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.listTransactionsResponse));
+    requestStub = sinon.stub(requestHelper, 'post')
+      .resolves({ data: responses.listTransactionsResponse });
   });
 
   afterEach(() => {
@@ -33,7 +28,7 @@ describe('#listTransactions', () => {
     } ];
 
     requestStub
-      .yields(null, {}, JSON.stringify(response));
+      .resolves({ data: response });
 
     return bitstamp.listTransactions(null, (err, response) => {
       expect(err).to.not.equal(null);
@@ -53,7 +48,7 @@ describe('#listTransactions', () => {
         timestamp: '2021-05-05T09:49:34.060Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[0]
+        raw: responses.listTransactionsResponse[1]
       },
       {
         currency: 'ETH',
@@ -62,7 +57,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-05-17T14:50:43.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[1]
+        raw: responses.listTransactionsResponse[2]
       },
       {
         currency: 'BTC',
@@ -71,7 +66,7 @@ describe('#listTransactions', () => {
         timestamp: '2016-02-15T12:25:49.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[4]
+        raw: responses.listTransactionsResponse[5]
       },
       {
         currency: 'BTC',
@@ -80,7 +75,7 @@ describe('#listTransactions', () => {
         timestamp: '2015-09-03T11:40:46.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[5]
+        raw: responses.listTransactionsResponse[6]
       },
       {
         currency: 'USD',
@@ -89,7 +84,7 @@ describe('#listTransactions', () => {
         timestamp: '2015-09-03T11:30:40.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[6]
+        raw: responses.listTransactionsResponse[7]
       },
       {
         currency: 'EUR',
@@ -98,7 +93,7 @@ describe('#listTransactions', () => {
         timestamp: '2018-07-10T09:23:01.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[8]
+        raw: responses.listTransactionsResponse[9]
       },
       {
         currency: 'BCH',
@@ -107,12 +102,13 @@ describe('#listTransactions', () => {
         timestamp: '2018-08-22T11:46:13.000Z',
         state: 'completed',
         type: 'deposit',
-        raw: responses.listTransactionsResponse[9]
+        raw: responses.listTransactionsResponse[10]
       }
     ]);
 
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[1]).to.equal('limit=100&offset=0&sort=desc');
   });
 
   it('should use latestTransaction', async () => {
@@ -133,7 +129,7 @@ describe('#listTransactions', () => {
         timestamp: '2021-05-05T09:49:34.060Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[0]
+        raw: responses.listTransactionsResponse[1]
       },
       {
         currency: 'ETH',
@@ -142,12 +138,8 @@ describe('#listTransactions', () => {
         timestamp: '2018-05-17T14:50:43.000Z',
         state: 'completed',
         type: 'withdrawal',
-        raw: responses.listTransactionsResponse[1]
+        raw: responses.listTransactionsResponse[2]
       }
     ]);
-
-    expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('http://localhost:3000/api/v2/user_transactions/');
   });
-
 });

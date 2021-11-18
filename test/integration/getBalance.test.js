@@ -1,23 +1,19 @@
-const expect = require('chai').expect,
-  { promisify } = require('util'),
-  sinon = require('sinon'),
-  responses = require('./../responses.js'),
-  errorCodes = require('../../lib/error_codes'),
-  request = require('request'),
-  Bitstamp = require('../../index.js');
+const expect = require('chai').expect;
+const { promisify } = require('util');
+const sinon = require('sinon');
+const responses = require('./../responses.js');
+const errorCodes = require('../../lib/error_codes');
+const { initModule } = require('../helpers');
+const requestHelper = require('../../lib/request_helper');
 
 describe('#getBalance', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId',
-    host: 'http://localhost:3000'
-  });
+  const bitstamp = initModule();
 
+  let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post');
-
+    requestStub = sinon.stub(requestHelper, 'post');
+    requestStub.resolves({ data: responses.getBalanceResponse });
   });
 
   afterEach(() => {
@@ -25,8 +21,6 @@ describe('#getBalance', () => {
   });
 
   it('should get and return balance', async () => {
-    requestStub.yields(null, {}, JSON.stringify(responses.getBalanceResponse));
-
     const res = await promisify(bitstamp.getBalance.bind(bitstamp))();
     expect(res).to.deep.equal({
       available: {
@@ -42,68 +36,32 @@ describe('#getBalance', () => {
 
   it('should returns an error upon request', (done) => {
     const errorCause = new Error('Some random test error');
-    requestStub.yields(errorCause, {}, JSON.stringify(responses.getBalanceResponse));
-
-
-    bitstamp.getBalance((err) => {
-      expect(err.message).to.equal('There is an error in the response from the Bitstamp service...');
-      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
-      expect(err.cause).to.equal(errorCause);
-
-      done();
-    });
-  });
-
-  it('should return error if response is empty', (done) => {
-    requestStub.yields(null, {}, null);
+    requestStub.rejects(errorCause);
 
     bitstamp.getBalance((err) => {
-      expect(err.message).to.equal('There is an error in the response from the Bitstamp service...');
-      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
-
-      done();
-    });
-  });
-
-  it('should return error if response contains errorMessage', (done) => {
-    const exchangeError = new Error('Some random test error');
-    requestStub.yields(null, { error: exchangeError }, JSON.stringify(responses.getBalanceResponse));
-
-
-    bitstamp.getBalance((err) => {
-      expect(err.message).to.equal('The exchange service responded with an error...');
-      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
-      expect(err.cause).to.equal(exchangeError);
+      try {
+        expect(err.message).to.equal('Error response: Some random test error');
+        expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
+        expect(err.cause).to.equal(errorCause);
+      } catch(err) {
+        return done(err);
+      }
 
       done();
     });
   });
 
   it('should return error if data contains errorMessage', (done) => {
-    const exchangeErrorMsg = 'Some random test error';
-
-    requestStub.yields(null, {}, JSON.stringify({ error: exchangeErrorMsg }));
+    requestStub.resolves({ data: { status: 'error', error: 'some error here' } });
 
     bitstamp.getBalance((err) => {
-      expect(err.message).to.equal('There is an error in the body of the response from the exchange service...');
-      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
-      expect(err.cause).to.be.an('Error');
-      expect(err.cause.message).to.equal(JSON.stringify(exchangeErrorMsg));
-
-      done();
-    });
-  });
-
-  it('should return error if data contains status with error message', (done) => {
-    const response = { status: 'error', reason: 'Invalid signature', code: 'API0005' };
-
-    requestStub.yields(null, {}, JSON.stringify(response));
-
-    bitstamp.getBalance((err) => {
-      expect(err.message).to.equal('There is an error in the body of the response from the exchange service...');
-      expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
-      expect(err.cause).to.be.an('Error');
-      expect(err.cause.message).to.equal(JSON.stringify(response));
+      try {
+        expect(err.message).to.equal('Error in result: {"status":"error","error":"some error here"}');
+        expect(err.code).to.equal(errorCodes.EXCHANGE_SERVER_ERROR);
+        expect(err.cause).to.be.an('Error');
+      } catch(err) {
+        return done(err);
+      }
 
       done();
     });

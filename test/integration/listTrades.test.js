@@ -1,37 +1,21 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const responses = require('./../responses.js');
-const request = require('request');
-const Bitstamp = require('../../index.js');
-const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
-
-chai.use(chaiAsPromised);
+const requestHelper = require('../../lib/request_helper');
+const { initModule } =require('../helpers');
 
 describe('#listTrades', () => {
 
-  const bitstamp = new Bitstamp({
-    key: 'apikey',
-    secret: 'apisecret',
-    clientId: 'clientId'
-  });
+  const bitstamp = initModule();
 
   let requestStub;
   beforeEach(() => {
-    requestStub = sinon.stub(request, 'post')
-      .yields(null, {}, JSON.stringify(responses.listTransactionsResponse));
+    requestStub = sinon.stub(requestHelper, 'post')
+      .resolves({ data: responses.listTransactionsResponse });
   });
 
   afterEach(() => {
     requestStub.restore();
-  });
-
-  it('should throw error if weird response', async () => {
-    requestStub
-      .yields(null, {}, '{}');
-
-
-    await expect(bitstamp.listTrades()).to.eventually.be.rejectedWith('Response from Bitstamp is not an array {}');
   });
 
   it('should use latestTrade when provided', async () => {
@@ -41,25 +25,47 @@ describe('#listTrades', () => {
       }
     };
 
-    const result = await bitstamp.listTrades(latestTrade);
+    const trades = await bitstamp.listTrades(latestTrade);
 
-    expect(result).to.deep.equal([
-      {
-        externalId: '1234',
-        type: 'limit',
-        state: 'closed',
-        baseCurrency: 'ETH',
-        baseAmount: 14512580000,
-        quoteCurrency: 'USD',
-        quoteAmount: -997,
-        feeCurrency: 'USD',
-        feeAmount: 3,
-        tradeTime: new Date('2018-05-16T07:11:20.000Z'),
-        raw: responses.listTransactionsResponse[2]
+    expect(trades[0]).to.deep.include({
+      baseCurrency: 'USDC',
+      baseAmount: 24995750000,
+      externalId: '1424980908085250',
+      type: 'limit',
+      state: 'closed',
+      quoteCurrency: 'USD',
+      quoteAmount: -25000,
+      feeCurrency: 'USD',
+      feeAmount: 4,
+      raw: {
+        usd: '-250.00499',
+        usdc: '249.95750',
+        order_id: 1424980908085250,
+        usdc_usd: 1.00019,
+        datetime: '2021-11-12 15:25:04.170000',
+        fee: '0.03500',
+        btc: 0,
+        type: '2',
+        id: 207545544,
+        eur: 0
       }
-    ]);
+    });
 
+    expect(trades[1]).to.include({
+      externalId: '1234',
+      type: 'limit',
+      state: 'closed',
+      baseCurrency: 'ETH',
+      baseAmount: 14512580000,
+      quoteCurrency: 'USD',
+      quoteAmount: -997,
+      feeCurrency: 'USD',
+      feeAmount: 3,
+      raw: responses.listTransactionsResponse[3]
+    });
+
+    expect(trades[1].tradeTime).to.eql(new Date('2018-05-16T09:11:20.000Z'));
     expect(requestStub.calledOnce).to.equal(true);
-    expect(requestStub.firstCall.args[0].url).to.equal('https://www.bitstamp.net/api/v2/user_transactions/');
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
   });
 });
