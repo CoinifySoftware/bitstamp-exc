@@ -234,7 +234,7 @@ class Bitstamp {
         quoteAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.usd), 'USD'),
         feeCurrency: 'USD',
         feeAmount: currencyHelper.toSmallestSubunit(parseFloat(tx.fee), 'USD'),
-        tradeTime: new Date(tx.datetime),
+        tradeTime: new Date(tx.datetime + ' UTC'),
         raw: tx
       };
     });

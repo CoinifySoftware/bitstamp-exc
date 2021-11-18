@@ -40,7 +40,7 @@ describe('#listTrades', () => {
       raw: responses.listTransactionsResponse[2]
     });
 
-    expect(trades[0].tradeTime.getTime()).to.equal(1526454680000);
+    expect(trades[0].tradeTime).to.eql(new Date('2018-05-16T09:11:20.000Z'));
     expect(requestStub.calledOnce).to.equal(true);
     expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
   });
