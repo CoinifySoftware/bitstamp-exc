@@ -25,24 +25,22 @@ describe('#listTrades', () => {
       }
     };
 
-    const result = await bitstamp.listTrades(latestTrade);
+    const trades = await bitstamp.listTrades(latestTrade);
 
-    expect(result).to.deep.equal([
-      {
-        externalId: '1234',
-        type: 'limit',
-        state: 'closed',
-        baseCurrency: 'ETH',
-        baseAmount: 14512580000,
-        quoteCurrency: 'USD',
-        quoteAmount: -997,
-        feeCurrency: 'USD',
-        feeAmount: 3,
-        tradeTime: new Date('2018-05-16T07:11:20.000Z'),
-        raw: responses.listTransactionsResponse[2]
-      }
-    ]);
+    expect(trades[0]).to.include({
+      externalId: '1234',
+      type: 'limit',
+      state: 'closed',
+      baseCurrency: 'ETH',
+      baseAmount: 14512580000,
+      quoteCurrency: 'USD',
+      quoteAmount: -997,
+      feeCurrency: 'USD',
+      feeAmount: 3,
+      raw: responses.listTransactionsResponse[2]
+    });
 
+    expect(trades[0].tradeTime.getTime()).to.equal(1526454680000);
     expect(requestStub.calledOnce).to.equal(true);
     expect(requestStub.firstCall.args[0]).to.equal('/api/v2/user_transactions/');
   });
