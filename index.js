@@ -85,25 +85,15 @@ class Bitstamp {
     });
   }
 
+
   getBalance(callback) {
     this._post('v2/balance', null, function (err, res) {
       if (err) {
         return callback(err);
       }
-
       const balance = {
-        available: {
-          ETH: currencyHelper.toSmallestSubunit(res.eth_available, 'ETH'),
-          BCH: currencyHelper.toSmallestSubunit(res.bch_available, 'BCH'),
-          USD: currencyHelper.toSmallestSubunit(res.usd_available, 'USD'),
-          BTC: currencyHelper.toSmallestSubunit(res.btc_available, 'BTC')
-        },
-        total: {
-          ETH: currencyHelper.toSmallestSubunit(res.eth_balance, 'ETH'),
-          BCH: currencyHelper.toSmallestSubunit(res.bch_balance, 'BCH'),
-          USD: currencyHelper.toSmallestSubunit(res.usd_balance, 'USD'),
-          BTC: currencyHelper.toSmallestSubunit(res.btc_balance, 'BTC')
-        }
+        available: extractBalances(res, /_available/),
+        total: extractBalances(res, /_balance/)
       };
 
       return callback(null, balance);
@@ -390,6 +380,13 @@ class Bitstamp {
 
 }
 
+function extractBalances(res, regex) {
+  return _(res)
+    .pickBy((v, k) => regex.test(k))
+    .mapKeys((amount, currency) => currency.replace(regex, '').toUpperCase())
+    .mapValues((amount, currency) => currencyHelper.toSmallestSubunit(amount, currency))
+    .value();
+}
 /**
  * Make requests to fetch transactions, on chunks of 1000 objects (the response limit of Bitstamp),
  * iterate through each chunk and gather only the txs of type 'deposit' (type = 0) or 'withdrawal' (type = 1).
