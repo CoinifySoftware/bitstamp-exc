@@ -94,12 +94,15 @@ class Bitstamp {
       }
       this.log.debug({ data: res }, 'Bitstamp API response for /v2/balance');
 
-      const balance = {
-        available: extractBalances(res, /_available/),
-        total: extractBalances(res, /_balance/)
-      };
-
-      return callback(null, balance);
+      try {
+        const balance = {
+          available: extractBalances(res, /_available/),
+          total: extractBalances(res, /_balance/)
+        };
+        return callback(null, balance);
+      } catch (err) {
+        return callback(err);
+      }
     });
   }
 
