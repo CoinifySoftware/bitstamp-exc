@@ -390,7 +390,7 @@ function extractBalances(res, regex) {
   return _(res)
     .pickBy((v, k) => regex.test(k))
     .mapKeys((amount, currency) => currency.replace(regex, '').toUpperCase())
-    .omit([ 'ETH2' ])
+    .pickBy((amount, currency) => currencyHelper.isValidCurrency(currency))
     .mapValues((amount, currency) => currencyHelper.toSmallestSubunit(amount, currency))
     .value();
 }
