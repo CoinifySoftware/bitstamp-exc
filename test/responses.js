@@ -23,6 +23,8 @@ const getBalanceResponse =
   usd_available: '49.00',
   eth_available: '0.1',
   eth_balance: '0.2',
+  eth2_available: '0.11',
+  eth2_balance: '0.22',
   bch_available: '0.12',
   bch_balance: '0.21'
 };

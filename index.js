@@ -18,7 +18,8 @@ class Bitstamp {
 
     requestHelper.init({
       baseURL: this.baseURL,
-      timeout: timeout || 5000
+      timeout: timeout || 5000,
+      logger: this.log
     });
   }
 
@@ -87,10 +88,12 @@ class Bitstamp {
 
 
   getBalance(callback) {
-    this._post('v2/balance', null, function (err, res) {
+    this._post('v2/balance', null, (err, res) => {
       if (err) {
         return callback(err);
       }
+      this.log.debug({ data: res }, 'Bitstamp API response for /v2/balance');
+
       const balance = {
         available: extractBalances(res, /_available/),
         total: extractBalances(res, /_balance/)
@@ -384,6 +387,7 @@ function extractBalances(res, regex) {
   return _(res)
     .pickBy((v, k) => regex.test(k))
     .mapKeys((amount, currency) => currency.replace(regex, '').toUpperCase())
+    .omit([ 'ETH2' ])
     .mapValues((amount, currency) => currencyHelper.toSmallestSubunit(amount, currency))
     .value();
 }
