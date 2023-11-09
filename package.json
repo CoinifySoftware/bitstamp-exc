@@ -1,6 +1,6 @@
 {
   "name": "bitstamp-exc",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "description": "An NPM package for utilizing the Bitstamp exchange API",
   "main": "index.js",
   "scripts": {
