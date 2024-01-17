@@ -55,6 +55,19 @@ const getOrderBookResponseETH =
   ]
 };
 
+const getOrderBookResponseUSDC =
+{
+  timestamp: '1455629907',
+  bids: [
+    [ '0.99997', '49712.05962' ],
+    [ '0.99995', '50002.50006' ]
+  ],
+  asks: [
+    [ '1.00000', '40987.23412' ],
+    [ '1.00001', '114975.96085' ]
+  ]
+};
+
 const getTradeSellResponse =
 {
   status: 'Finished',
@@ -260,7 +273,7 @@ const placeTradeResponse =
 module.exports = {
   getTickerResponse: getTickerResponse,
   getBalanceResponse: getBalanceResponse,
-  getOrderBookResponseBTC, getOrderBookResponseETH,
+  getOrderBookResponseBTC, getOrderBookResponseETH, getOrderBookResponseUSDC,
   getTradeSellResponse: getTradeSellResponse,
   getTradeBuyResponseBTC, getTradeBuyResponseETH,
   listTransactionsResponse: listTransactionsResponse,
