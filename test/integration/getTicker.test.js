@@ -85,4 +85,26 @@ describe('#getTicker', () => {
     expect(requestStub.firstCall.args[0]).to.equal('/api/v2/ticker/ethusd/');
   });
 
+  it('should get and return ticker data (USDC)', async () => {
+    const baseCurrency = 'USDC';
+    const quoteCurrency = 'USD';
+
+    const res = await promisify(bitstamp.getTicker.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+    expect(res).to.deep.equal({
+      baseCurrency: 'USDC',
+      quoteCurrency: 'USD',
+      bid: 596.09,
+      ask: 596.11,
+      lastPrice: 596.09,
+      high24Hours: 597.53,
+      low24Hours: 579.43,
+      vwap24Hours: 586.35,
+      volume24Hours: 359669846615
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/ticker/usdcusd/');
+  });
+
 });
