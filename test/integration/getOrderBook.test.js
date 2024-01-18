@@ -115,6 +115,31 @@ describe('#getOrderBook', () => {
     expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/usdcusd/');
   });
 
+  it('should get and return order book for USDTUSD', async () => {
+    requestStub.resolves({ data: responses.getOrderBookResponseUSDT });
+
+    const baseCurrency = 'USDT';
+    const quoteCurrency = 'USD';
+
+    const res = await promisify(bitstamp.getOrderBook.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+    expect(res).to.deep.equal({
+      baseCurrency: 'USDT',
+      quoteCurrency: 'USD',
+      bids: [
+        { price: 0.99997, baseAmount: 4971205962000 },
+        { price: 0.99995, baseAmount: 5000250006000 }
+      ],
+      asks: [
+        { price: 1, baseAmount: 4098723412000 },
+        { price: 1.00001, baseAmount: 11497596085000 }
+      ]
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/usdtusd/');
+  });
+
   it('should throw err if currency pair is not supported', (done) => {
     const baseCurrency = 'XMR';
     const quoteCurrency = 'USD';
