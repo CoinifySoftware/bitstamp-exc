@@ -42,6 +42,29 @@ describe('#getOrderBook', () => {
     expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/btcusd/');
   });
 
+  it('should get and return order book for BTCEUR', async () => {
+    const baseCurrency = 'BTC';
+    const quoteCurrency = 'EUR';
+
+    const res = await promisify(bitstamp.getOrderBook.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+    expect(res).to.deep.equal({
+      baseCurrency: 'BTC',
+      quoteCurrency: 'EUR',
+      bids: [
+        { price: 403.53, baseAmount: 81383821 },
+        { price: 403.35, baseAmount: 161018019 }
+      ],
+      asks: [
+        { price: 404, baseAmount: 1967704402 },
+        { price: 404.39, baseAmount: 736300000 }
+      ]
+    });
+
+    expect(requestStub.calledOnce).to.equal(true);
+    expect(requestStub.firstCall.args[0]).to.equal('/api/v2/order_book/btceur/');
+  });
+
   it('should get and return order book for BCHUSD', async () => {
     const baseCurrency = 'BCH';
     const quoteCurrency = 'USD';
