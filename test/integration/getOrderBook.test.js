@@ -22,7 +22,8 @@ describe('#getOrderBook', () => {
     { baseCurrency: 'BTC', quoteCurrency: 'USD', bitstampSymbol: 'btcusd' },
     { baseCurrency: 'BTC', quoteCurrency: 'EUR', bitstampSymbol: 'btceur' },
     { baseCurrency: 'BCH', quoteCurrency: 'USD', bitstampSymbol: 'bchusd' },
-    { baseCurrency: 'BCH', quoteCurrency: 'EUR', bitstampSymbol: 'bcheur' }
+    { baseCurrency: 'BCH', quoteCurrency: 'EUR', bitstampSymbol: 'bcheur' },
+    { baseCurrency: 'ALGO', quoteCurrency: 'USD', bitstampSymbol: 'algousd' }
   ].forEach(({ baseCurrency, quoteCurrency, bitstampSymbol }) => {
     it(`should get and return order book for ${baseCurrency}/${quoteCurrency}`, async () => {
       requestStub.resolves({ data: responses.getOrderBookResponseBTC });
