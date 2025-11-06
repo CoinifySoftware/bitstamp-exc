@@ -22,8 +22,7 @@ describe('#getOrderBook', () => {
     { baseCurrency: 'BTC', quoteCurrency: 'USD', bitstampSymbol: 'btcusd' },
     { baseCurrency: 'BTC', quoteCurrency: 'EUR', bitstampSymbol: 'btceur' },
     { baseCurrency: 'BCH', quoteCurrency: 'USD', bitstampSymbol: 'bchusd' },
-    { baseCurrency: 'BCH', quoteCurrency: 'EUR', bitstampSymbol: 'bcheur' },
-    { baseCurrency: 'ALGO', quoteCurrency: 'USD', bitstampSymbol: 'algousd' }
+    { baseCurrency: 'BCH', quoteCurrency: 'EUR', bitstampSymbol: 'bcheur' }
   ].forEach(({ baseCurrency, quoteCurrency, bitstampSymbol }) => {
     it(`should get and return order book for ${baseCurrency}/${quoteCurrency}`, async () => {
       requestStub.resolves({ data: responses.getOrderBookResponseBTC });
@@ -117,6 +116,31 @@ describe('#getOrderBook', () => {
         asks: [
           { price: 1, baseAmount: 4098723412000 },
           { price: 1.00001, baseAmount: 11497596085000 }
+        ]
+      });
+
+      expect(requestStub.calledOnce).to.equal(true);
+      expect(requestStub.firstCall.args[0]).to.equal(`/api/v2/order_book/${bitstampSymbol}/`);
+    });
+  });
+
+  [
+    { baseCurrency: 'ALGO', quoteCurrency: 'USD', bitstampSymbol: 'algousd' }
+  ].forEach(({ baseCurrency, quoteCurrency, bitstampSymbol }) => {
+    it(`should get and return order book for ${baseCurrency}/${quoteCurrency} 6 decimals precision`, async () => {
+      requestStub.resolves({ data: responses.getOrderBookResponseUSDC });
+      const res = await promisify(bitstamp.getOrderBook.bind(bitstamp))(baseCurrency, quoteCurrency);
+
+      expect(res).to.deep.equal({
+        baseCurrency,
+        quoteCurrency,
+        bids: [
+          { price: 0.99997, baseAmount: 49712059620 },
+          { price: 0.99995, baseAmount: 50002500060 }
+        ],
+        asks: [
+          { price: 1, baseAmount: 40987234120 },
+          { price: 1.00001, baseAmount: 114975960850 }
         ]
       });
 
